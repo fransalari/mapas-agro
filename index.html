@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TAGH GESTION · Cálculo de Tasa de Riesgo</title>
+<title>TAGH Gestión · Análisis de Siniestralidad Agrícola</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -60,8 +60,8 @@
   .filtro select:hover { border-color: #999; }
   .filtro select:focus { outline: none; border-color: #1F4E78; box-shadow: 0 0 0 3px rgba(31,78,120,.1); }
   .main {
-    display: grid; grid-template-columns: 1fr 200px;
-    gap: 20px; padding: 20px 32px 32px 32px;
+    display: grid; grid-template-columns: 1fr 220px;
+    gap: 20px; padding: 20px 32px 12px 32px;
   }
   .mapa-wrap {
     position: relative;
@@ -87,29 +87,51 @@
     font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500;
   }
   .kpi-valor {
-    font-size: 30px; font-weight: 700; color: #1a1a1a; line-height: 1;
+    font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1;
     letter-spacing: -0.5px;
   }
   .kpi-extra {
     font-size: 11px; color: #999; margin-top: 4px;
   }
+  /* Leyenda continua */
   .legend {
-    background: white; padding: 8px 11px;
+    background: white; padding: 10px 12px;
     border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.15);
-    font-size: 11px; line-height: 1.6;
+    font-size: 11px; line-height: 1.5;
+    min-width: 140px;
   }
-  .legend .titulo { font-weight: 700; margin-bottom: 4px; color: #333; font-size: 11px; }
-  .legend i {
-    display: inline-block; width: 14px; height: 11px; margin-right: 6px;
-    vertical-align: middle; border: 1px solid rgba(0,0,0,.1);
+  .legend .titulo { font-weight: 700; margin-bottom: 6px; color: #333; font-size: 11px; }
+  .legend-bar {
+    height: 10px;
+    background: linear-gradient(to right, #1a9850 0%, #91cf60 20%, #d9ef8b 40%, #fee08b 60%, #fc8d59 80%, #d73027 100%);
+    border-radius: 2px;
+    margin-bottom: 4px;
+    border: 1px solid rgba(0,0,0,.1);
   }
+  .legend-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #666;
+  }
+  .legend-sin-dato {
+    margin-top: 6px; font-size: 10px; color: #666;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .legend-sin-dato i {
+    display: inline-block; width: 14px; height: 10px;
+    background: #e6e6e6; border: 1px solid rgba(0,0,0,.1);
+  }
+  /* Etiquetas LC dentro de polígonos */
   .leaflet-tooltip.lc-label {
-    background: rgba(255,255,255,.85); border: none;
-    color: #2a2a2a; font-weight: 700; font-size: 10px;
-    padding: 1px 4px; border-radius: 2px; box-shadow: none;
+    background: rgba(255,255,255,.92); border: 1px solid rgba(0,0,0,.15);
+    color: #1a1a1a; font-weight: 700; font-size: 10px;
+    padding: 1px 5px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,.1);
     pointer-events: none;
   }
   .leaflet-tooltip.lc-label:before { display: none; }
+  .leaflet-tooltip.lc-label.label-grande { font-size: 12px; padding: 2px 7px; }
+  .leaflet-tooltip.lc-label.label-chico { font-size: 9px; padding: 1px 3px; }
+
+  /* Popup */
   .leaflet-popup-content { margin: 12px 14px; min-width: 220px; }
   .popup-tabla h4 {
     margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a; font-weight: 700;
@@ -120,6 +142,14 @@
   .popup-tabla td:first-child { color: #666; }
   .popup-tabla td:last-child { font-weight: 600; text-align: right; color: #1a1a1a; }
   .popup-tabla tr.destacado td { color: #1F4E78; font-weight: 700; padding-top: 6px; border-top: 1px solid #e8e8ec; }
+
+  .disclaimer {
+    padding: 0 32px 20px 32px;
+    font-size: 11px; color: #888; line-height: 1.5;
+    border-top: 1px solid #e8e8ec; padding-top: 14px; margin-top: 8px;
+  }
+  .disclaimer strong { color: #555; }
+
   #status {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,.78); color: white;
@@ -127,6 +157,7 @@
     z-index: 9999; transition: opacity .3s;
   }
   #status.hidden { opacity: 0; pointer-events: none; }
+
   @media (max-width: 900px) {
     .main { grid-template-columns: 1fr; }
     .kpis { flex-direction: row; flex-wrap: wrap; }
@@ -139,8 +170,8 @@
 
 <div class="header">
   <div class="header-titulo">
-    <h1>Cálculo de tasa de riesgo histórico con 1 CAT</h1>
-    <p>Loss Cost medio + margen CAT histórico + gastos operativos, comerciales y administrativos</p>
+    <h1>Análisis histórico de siniestralidad agrícola por departamento</h1>
+    <p>Indicadores estadísticos elaborados sobre datos de campañas previas — Material analítico de referencia</p>
   </div>
   <div class="header-logo">TAGH<span class="sub">GESTION</span></div>
 </div>
@@ -149,13 +180,7 @@
   <div class="filtro"><select id="f-provincia"><option value="">Provincia</option></select></div>
   <div class="filtro"><select id="f-departamento"><option value="">Departamento</option></select></div>
   <div class="filtro"><select id="f-cultivo"><option value="">Cultivo</option></select></div>
-  <div class="filtro"><select id="f-escenario">
-    <option value="auto" selected>Escenario CAT (años reales)</option>
-    <option value="5">CAT en 5 años (conservador)</option>
-    <option value="10">CAT en 10 años (estándar)</option>
-    <option value="15">CAT en 15 años</option>
-    <option value="20">CAT en 20 años (agresivo)</option>
-  </select></div>
+  <div class="filtro"><select id="f-escenario"></select></div>
 </div>
 
 <div class="filtros-row row-2">
@@ -169,40 +194,64 @@
   </div>
   <div class="kpis">
     <div class="kpi">
-      <div class="kpi-label">T. Técnica</div>
-      <div class="kpi-valor" id="kpi-tecnica">—</div>
-      <div class="kpi-extra">LC medio</div>
+      <div class="kpi-label">LC histórico</div>
+      <div class="kpi-valor" id="kpi-lc">—</div>
+      <div class="kpi-extra">Siniestralidad media observada</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">T. con CAT</div>
+      <div class="kpi-label">LC ajustado CAT</div>
       <div class="kpi-valor" id="kpi-cat">—</div>
-      <div class="kpi-extra">LC + margen CAT</div>
+      <div class="kpi-extra">Incluye margen catastrófico</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">% T. Comercial</div>
-      <div class="kpi-valor" id="kpi-comercial">—</div>
-      <div class="kpi-extra">incl. 30% gastos</div>
+      <div class="kpi-label">Referencia analítica</div>
+      <div class="kpi-valor" id="kpi-ref">—</div>
+      <div class="kpi-extra">Indicador integral histórico</div>
     </div>
   </div>
+</div>
+
+<div class="disclaimer">
+  <strong>Aclaración:</strong> Los valores presentados son indicadores estadísticos elaborados sobre información histórica de campañas previas, agregada por departamento, cultivo y tipo de cobertura. Constituyen material analítico de referencia y no representan recomendaciones tarifarias ni precios de mercado. Cada operador debe realizar su propio análisis técnico y comercial.
 </div>
 
 <div id="status">Cargando datos…</div>
 
 <script>
-const GEOJSON_URL = 'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json';
-// IMPORTANTE: cambiá esta URL cuando publiques el sheet como CSV
-// Archivo → Compartir → Publicar en la web → Formato: Valores separados por comas (.csv) → Publicar
+const GEOJSON_URL = 'https://raw.githubusercontent.com/fransalari/coberturas-agro/main/admin_boundaries_vf.json';
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRHau9l0Q5QoFaQn-ASEMucWy1h80s3P4I-gFD9sjX-x0owntDmr8fBIAE_TpNwlyCdrZ-oxdBsrkKe/pub?output=csv';
 
-const UMBRALES_DESVIO = { bajo: 3.0, alto: 8.0 };
-const COLORES = { bajo: '#67b26f', medio: '#f6c544', alto: '#e85d4a', sin_dato: '#e6e6e6' };
+// Si la URL del repo cambió, ajustar aquí. Detectar automáticamente desde el ubicación actual:
+const GEOJSON_URL_FALLBACK = 'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json';
+
+const ESCENARIO_DEFAULT = 'N (dinámico)';
+
+// ====== ESCALA DE COLOR CONTINUA (rojo→amarillo→verde, semáforo invertido) ======
+// Verde = baja variabilidad (bueno), Rojo = alta variabilidad (riesgo)
+// Paleta tipo RdYlGn invertida (típica para riesgo)
+const PALETA = [
+  { stop: 0.00, color: [26, 152, 80] },     // #1a9850 verde fuerte
+  { stop: 0.20, color: [145, 207, 96] },    // #91cf60 verde claro
+  { stop: 0.40, color: [217, 239, 139] },   // #d9ef8b amarillo verdoso
+  { stop: 0.60, color: [254, 224, 139] },   // #fee08b amarillo
+  { stop: 0.80, color: [252, 141, 89] },    // #fc8d59 naranja
+  { stop: 1.00, color: [215, 48, 39] }      // #d73027 rojo
+];
+const COLOR_SIN_DATO = '#e6e6e6';
 
 let geojsonData = null;
 let csvData = [];
 let layerDeptos = null;
 let map = null;
 let etiquetas = [];
-const filtros = { provincia: '', departamento: '', cultivo: '', cobertura: '', escenario: 'auto' };
+
+// Min/max dinámicos del desvío (se calculan al filtrar)
+let desvioMin = 0, desvioMax = 0;
+
+const filtros = {
+  provincia: '', departamento: '', cultivo: '', cobertura: '',
+  escenario: ESCENARIO_DEFAULT
+};
 
 async function init() {
   initMap();
@@ -224,31 +273,48 @@ function initMap() {
     attribution: '© OpenStreetMap · CARTO', subdomains: 'abcd', maxZoom: 18
   }).addTo(map);
 
+  // Leyenda continua
   const legend = L.control({ position: 'bottomright' });
   legend.onAdd = function() {
     const div = L.DomUtil.create('div', 'legend');
+    div.id = 'leyenda-mapa';
     div.innerHTML = `
-      <div class="titulo">Desvío LC</div>
-      <div><i style="background:${COLORES.bajo}"></i> Bajo</div>
-      <div><i style="background:${COLORES.medio}"></i> Medio</div>
-      <div><i style="background:${COLORES.alto}"></i> Alto</div>`;
+      <div class="titulo">Variabilidad LC (desvío)</div>
+      <div class="legend-bar"></div>
+      <div class="legend-labels">
+        <span>Baja</span>
+        <span id="leg-mid">—</span>
+        <span>Alta</span>
+      </div>
+      <div class="legend-sin-dato"><i></i>Sin datos</div>
+    `;
     return div;
   };
   legend.addTo(map);
+
+  // Re-renderizar etiquetas al hacer zoom (cambia el tamaño según escala)
+  map.on('zoomend', actualizarEtiquetas);
 }
 
 async function cargarDatos() {
   setStatus('Descargando mapa…');
-  const geoResp = await fetch(GEOJSON_URL);
+  let geoResp;
+  try {
+    geoResp = await fetch(GEOJSON_URL);
+    if (!geoResp.ok) throw new Error('falló URL principal');
+  } catch(_) {
+    geoResp = await fetch(GEOJSON_URL_FALLBACK);
+  }
   geojsonData = await geoResp.json();
   if (geojsonData.type === 'Topology') {
     await cargarScript('https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js');
     const obj = Object.keys(geojsonData.objects)[0];
     geojsonData = topojson.feature(geojsonData, geojsonData.objects[obj]);
   }
+
   setStatus('Descargando datos…');
   const csvResp = await fetch(CSV_URL);
-  if (!csvResp.ok) throw new Error(`CSV no accesible (${csvResp.status}). Verificá que esté publicado como CSV.`);
+  if (!csvResp.ok) throw new Error(`CSV no accesible (${csvResp.status}). Verificá la publicación.`);
   const csvText = await csvResp.text();
   const parsed = Papa.parse(csvText, { header: true, dynamicTyping: true, skipEmptyLines: true });
   csvData = parsed.data.filter(r => r.geo_id != null);
@@ -264,13 +330,40 @@ function cargarScript(src) {
 }
 
 function popularFiltros() {
-  const provs = new Set(), cults = new Set();
+  const provs = new Set(), cults = new Set(), escenarios = new Set();
   for (const r of csvData) {
     if (r.provincia) provs.add(r.provincia);
     if (r.cultivo) cults.add(r.cultivo);
+    if (r.n_anios_cat != null && r.n_anios_cat !== '') escenarios.add(String(r.n_anios_cat));
   }
   fillSelect('f-provincia', [...provs].sort(), 'Provincia');
   fillSelect('f-cultivo', [...cults].sort(), 'Cultivo');
+
+  // Escenarios: dinámico primero, luego numéricos ascendentes
+  const escArr = [...escenarios].sort((a,b) => {
+    if (a === ESCENARIO_DEFAULT) return -1;
+    if (b === ESCENARIO_DEFAULT) return 1;
+    const na = parseFloat(a), nb = parseFloat(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return String(a).localeCompare(String(b));
+  });
+  const selEsc = document.getElementById('f-escenario');
+  selEsc.innerHTML = '';
+  for (const e of escArr) {
+    const opt = document.createElement('option');
+    opt.value = e;
+    let label = e;
+    if (e === ESCENARIO_DEFAULT) label = 'N (dinámico) — años reales';
+    else if (e === '5') label = 'CAT en 5 años';
+    else if (e === '10') label = 'CAT en 10 años';
+    else if (e === '15') label = 'CAT en 15 años';
+    else if (e === '20') label = 'CAT en 20 años';
+    else label = `CAT en ${e} años`;
+    opt.textContent = label;
+    selEsc.appendChild(opt);
+  }
+  selEsc.value = filtros.escenario;
+
   actualizarDepartamentos();
   actualizarCoberturas();
 }
@@ -345,21 +438,9 @@ function filtrarFilas() {
     if (filtros.departamento && r.departamento !== filtros.departamento) return false;
     if (filtros.cultivo && r.cultivo !== filtros.cultivo) return false;
     if (filtros.cobertura && r.cobertura !== filtros.cobertura) return false;
+    if (filtros.escenario && String(r.n_anios_cat) !== String(filtros.escenario)) return false;
     return true;
   });
-}
-
-function metricaTPP(r) {
-  if (filtros.escenario === 'auto') return r.lc_mas_cat_pct;
-  const n = parseInt(filtros.escenario);
-  const col = `tpp_cat_${n}_pct`;
-  return r[col] != null ? r[col] : r.lc_mas_cat_pct;
-}
-function metricaComercial(r) {
-  if (filtros.escenario === 'auto') return r.tasa_comercial_pct;
-  const n = parseInt(filtros.escenario);
-  const col = `tasa_calc_${n}_pct`;
-  return r[col] != null ? r[col] : r.tasa_comercial_pct;
 }
 
 function agregarPorGeoID(filas) {
@@ -370,8 +451,8 @@ function agregarPorGeoID(filas) {
     if (!out.has(gid)) {
       out.set(gid, {
         geo_id: gid, provincia: r.provincia, departamento: r.departamento,
-        lc_medio: [], lc_max: [], desvio_lc: [],
-        tpp: [], comercial: [], hectareas: 0, suma_asegurada: 0,
+        lc_medio: [], lc_max: [], desvio_lc: [], adic_cat_p: [],
+        lc_mas_cat: [], referencia: [], hectareas: 0, suma_asegurada: 0,
         registros: [], anios: []
       });
     }
@@ -379,8 +460,9 @@ function agregarPorGeoID(filas) {
     if (typeof r.lc_medio_pct === 'number') s.lc_medio.push(r.lc_medio_pct);
     if (typeof r.lc_max_pct === 'number') s.lc_max.push(r.lc_max_pct);
     if (typeof r.desvio_lc_pct === 'number') s.desvio_lc.push(r.desvio_lc_pct);
-    const tpp = metricaTPP(r); if (typeof tpp === 'number') s.tpp.push(tpp);
-    const com = metricaComercial(r); if (typeof com === 'number') s.comercial.push(com);
+    if (typeof r.adic_cat_prorrateado_pct === 'number') s.adic_cat_p.push(r.adic_cat_prorrateado_pct);
+    if (typeof r.lc_mas_cat_pct === 'number') s.lc_mas_cat.push(r.lc_mas_cat_pct);
+    if (typeof r.tasa_comercial_pct === 'number') s.referencia.push(r.tasa_comercial_pct);
     if (typeof r.hectareas === 'number') s.hectareas += r.hectareas;
     if (typeof r.suma_asegurada === 'number') s.suma_asegurada += r.suma_asegurada;
     if (typeof r.registros === 'number') s.registros.push(r.registros);
@@ -391,8 +473,9 @@ function agregarPorGeoID(filas) {
     s.lc_medio_avg = avg(s.lc_medio);
     s.lc_max_avg = avg(s.lc_max);
     s.desvio_lc_avg = avg(s.desvio_lc);
-    s.tpp_avg = avg(s.tpp);
-    s.comercial_avg = avg(s.comercial);
+    s.adic_cat_p_avg = avg(s.adic_cat_p);
+    s.lc_mas_cat_avg = avg(s.lc_mas_cat);
+    s.referencia_avg = avg(s.referencia);
     s.registros_avg = avg(s.registros);
     s.anios_avg = avg(s.anios);
   }
@@ -400,62 +483,109 @@ function agregarPorGeoID(filas) {
 }
 
 function calcularKPIs(filas) {
-  if (!filas.length) return { tecnica: null, cat: null, comercial: null };
-  let sumWLC = 0, sumWTPP = 0, sumWCom = 0, sumW = 0;
-  let sumLC = 0, sumTPP = 0, sumCom = 0, nLC = 0, nTPP = 0, nCom = 0;
+  if (!filas.length) return { lc: null, cat: null, ref: null };
+  let sumWLC = 0, sumWCAT = 0, sumWRef = 0, sumW = 0;
+  let sumLC = 0, sumCAT = 0, sumRef = 0, nLC = 0, nCAT = 0, nRef = 0;
   for (const r of filas) {
     const w = (typeof r.hectareas === 'number' && r.hectareas > 0) ? r.hectareas : 0;
     if (typeof r.lc_medio_pct === 'number') {
       sumLC += r.lc_medio_pct; nLC++;
       if (w) { sumWLC += r.lc_medio_pct * w; sumW += w; }
     }
-    const tpp = metricaTPP(r);
-    if (typeof tpp === 'number') { sumTPP += tpp; nTPP++; if (w) sumWTPP += tpp * w; }
-    const com = metricaComercial(r);
-    if (typeof com === 'number') { sumCom += com; nCom++; if (w) sumWCom += com * w; }
+    if (typeof r.lc_mas_cat_pct === 'number') {
+      sumCAT += r.lc_mas_cat_pct; nCAT++;
+      if (w) sumWCAT += r.lc_mas_cat_pct * w;
+    }
+    if (typeof r.tasa_comercial_pct === 'number') {
+      sumRef += r.tasa_comercial_pct; nRef++;
+      if (w) sumWRef += r.tasa_comercial_pct * w;
+    }
   }
-  if (sumW > 0) return { tecnica: sumWLC/sumW, cat: sumWTPP/sumW, comercial: sumWCom/sumW };
+  if (sumW > 0) return { lc: sumWLC/sumW, cat: sumWCAT/sumW, ref: sumWRef/sumW };
   return {
-    tecnica: nLC ? sumLC/nLC : null,
-    cat: nTPP ? sumTPP/nTPP : null,
-    comercial: nCom ? sumCom/nCom : null
+    lc: nLC ? sumLC/nLC : null,
+    cat: nCAT ? sumCAT/nCAT : null,
+    ref: nRef ? sumRef/nRef : null
   };
 }
 
-function colorDesvio(v) {
-  if (v == null || isNaN(v)) return COLORES.sin_dato;
-  if (v < UMBRALES_DESVIO.bajo) return COLORES.bajo;
-  if (v < UMBRALES_DESVIO.alto) return COLORES.medio;
-  return COLORES.alto;
+// ====== ESCALA DE COLOR CONTINUA ======
+function interpColor(t) {
+  // t en [0,1] → color hex
+  if (t == null || isNaN(t)) return COLOR_SIN_DATO;
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 0; i < PALETA.length - 1; i++) {
+    const a = PALETA[i], b = PALETA[i+1];
+    if (t >= a.stop && t <= b.stop) {
+      const localT = (t - a.stop) / (b.stop - a.stop);
+      const r = Math.round(a.color[0] + (b.color[0] - a.color[0]) * localT);
+      const g = Math.round(a.color[1] + (b.color[1] - a.color[1]) * localT);
+      const bl = Math.round(a.color[2] + (b.color[2] - a.color[2]) * localT);
+      return `rgb(${r},${g},${bl})`;
+    }
+  }
+  return COLOR_SIN_DATO;
 }
+
+function colorPorDesvio(v) {
+  if (v == null || isNaN(v)) return COLOR_SIN_DATO;
+  if (desvioMax === desvioMin) return interpColor(0.5);
+  // Usar percentiles para evitar outliers: capear al rango [min, max] calculado
+  const t = (v - desvioMin) / (desvioMax - desvioMin);
+  return interpColor(t);
+}
+
+// Calcula min/max de desvío para la escala dinámica
+// Usa percentiles 5% y 95% para evitar que un outlier achate toda la escala
+function calcularRangoDesvio(stats) {
+  const valores = [];
+  for (const s of stats.values()) {
+    if (typeof s.desvio_lc_avg === 'number') valores.push(s.desvio_lc_avg);
+  }
+  if (valores.length === 0) { desvioMin = 0; desvioMax = 1; return; }
+  valores.sort((a,b) => a-b);
+  const pct5  = valores[Math.floor(valores.length * 0.05)];
+  const pct95 = valores[Math.floor(valores.length * 0.95)];
+  desvioMin = pct5;
+  desvioMax = pct95;
+  // Asegurar rango no degenerado
+  if (desvioMax <= desvioMin) desvioMax = desvioMin + 0.01;
+
+  // Actualizar leyenda
+  const mid = document.getElementById('leg-mid');
+  if (mid) mid.textContent = ((desvioMin + desvioMax) / 2).toFixed(1) + '%';
+}
+
 const fmtPct = v => (v==null||isNaN(v)) ? '—' : v.toFixed(2) + '%';
 const fmtNum = v => (v==null||isNaN(v)) ? '—' : Math.round(v).toLocaleString('es-AR');
 const fmtMoney = v => (v==null||isNaN(v)) ? '—' : '$' + Math.round(v).toLocaleString('es-AR');
+
+let statsActuales = new Map();  // cache para actualizar etiquetas con zoom
 
 function refrescar() {
   if (!geojsonData) return;
   const filas = filtrarFilas();
   const stats = agregarPorGeoID(filas);
+  statsActuales = stats;
   const kpis = calcularKPIs(filas);
 
-  document.getElementById('kpi-tecnica').textContent = fmtPct(kpis.tecnica);
+  document.getElementById('kpi-lc').textContent = fmtPct(kpis.lc);
   document.getElementById('kpi-cat').textContent = fmtPct(kpis.cat);
-  document.getElementById('kpi-comercial').textContent = fmtPct(kpis.comercial);
+  document.getElementById('kpi-ref').textContent = fmtPct(kpis.ref);
+
+  // Calcular rango de desvío para la escala continua
+  calcularRangoDesvio(stats);
 
   if (layerDeptos) map.removeLayer(layerDeptos);
-  etiquetas.forEach(e => map.removeLayer(e));
-  etiquetas = [];
-
-  const mostrarEtiquetas = filtros.provincia !== '' || filtros.departamento !== '';
 
   layerDeptos = L.geoJSON(geojsonData, {
     style: feature => {
       const gid = feature.properties.gid_dpto || feature.properties.GeoID;
       const s = stats.get(gid);
       return {
-        fillColor: s ? colorDesvio(s.desvio_lc_avg) : COLORES.sin_dato,
+        fillColor: s ? colorPorDesvio(s.desvio_lc_avg) : COLOR_SIN_DATO,
         weight: 0.4, color: '#5a5a5a',
-        fillOpacity: s ? 0.78 : 0.20
+        fillOpacity: s ? 0.82 : 0.18
       };
     },
     onEachFeature: (feature, layer) => {
@@ -474,11 +604,12 @@ function refrescar() {
               <tr><td>Años considerados</td>      <td>${s.anios_avg ? s.anios_avg.toFixed(1) : '—'}</td></tr>
               <tr><td>Hectáreas (total)</td>      <td>${fmtNum(s.hectareas)}</td></tr>
               <tr><td>Suma asegurada</td>         <td>${fmtMoney(s.suma_asegurada)}</td></tr>
-              <tr><td>LC medio</td>               <td>${fmtPct(s.lc_medio_avg)}</td></tr>
+              <tr><td>LC histórico</td>           <td>${fmtPct(s.lc_medio_avg)}</td></tr>
               <tr><td>LC máximo</td>              <td>${fmtPct(s.lc_max_avg)}</td></tr>
-              <tr><td>Desvío LC</td>              <td>${fmtPct(s.desvio_lc_avg)}</td></tr>
-              <tr class="destacado"><td>T. con CAT</td>   <td>${fmtPct(s.tpp_avg)}</td></tr>
-              <tr class="destacado"><td>T. Comercial</td> <td>${fmtPct(s.comercial_avg)}</td></tr>
+              <tr><td>Variabilidad LC</td>        <td>${fmtPct(s.desvio_lc_avg)}</td></tr>
+              <tr><td>Adic CAT prorrateado</td>   <td>${fmtPct(s.adic_cat_p_avg)}</td></tr>
+              <tr class="destacado"><td>LC ajustado CAT</td>   <td>${fmtPct(s.lc_mas_cat_avg)}</td></tr>
+              <tr class="destacado"><td>Referencia analítica</td> <td>${fmtPct(s.referencia_avg)}</td></tr>
             </table>
           </div>`);
       } else {
@@ -490,21 +621,10 @@ function refrescar() {
         e.target.bringToFront();
       });
       layer.on('mouseout', e => layerDeptos.resetStyle(e.target));
-
-      if (s && mostrarEtiquetas && s.lc_medio_avg != null) {
-        try {
-          const center = layer.getBounds().getCenter();
-          const label = L.tooltip({
-            permanent: true, direction: 'center',
-            className: 'lc-label', opacity: 1
-          }).setLatLng(center).setContent(s.lc_medio_avg.toFixed(1) + '%');
-          label.addTo(map);
-          etiquetas.push(label);
-        } catch(e) {}
-      }
     }
   }).addTo(map);
 
+  // Zoom según filtros
   if (filtros.departamento) {
     const feat = geojsonData.features.find(f => {
       const d = f.properties.nam_dpto || f.properties.departamento;
@@ -526,6 +646,61 @@ function refrescar() {
     }
   } else {
     map.setView([-35, -64], 5);
+  }
+
+  // Las etiquetas se renderizan después del zoom
+  setTimeout(actualizarEtiquetas, 100);
+}
+
+// Renderiza etiquetas según el zoom actual y los polígonos visibles en pantalla
+function actualizarEtiquetas() {
+  if (!layerDeptos || !geojsonData) return;
+
+  // Limpiar etiquetas existentes
+  etiquetas.forEach(e => map.removeLayer(e));
+  etiquetas = [];
+
+  const zoom = map.getZoom();
+  const bounds = map.getBounds();
+
+  // En zoom muy bajo no mostrar nada (sería ilegible)
+  if (zoom < 5) return;
+
+  // Tamaño de fuente según zoom
+  let claseTam = '';
+  if (zoom >= 8) claseTam = 'label-grande';
+  else if (zoom <= 5) claseTam = 'label-chico';
+
+  // Para evitar sobrecargar, en zoom bajo sólo mostrar polígonos GRANDES
+  // (Calculamos el área aproximada del bounding box en pantalla)
+  const minPixelArea = zoom < 6 ? 3000 : (zoom < 7 ? 1500 : 800);
+
+  for (const feature of geojsonData.features) {
+    const gid = feature.properties.gid_dpto || feature.properties.GeoID;
+    const s = statsActuales.get(gid);
+    if (!s || s.lc_medio_avg == null) continue;
+
+    // Verificar que el polígono esté visible
+    try {
+      const layer = L.geoJSON(feature);
+      const featBounds = layer.getBounds();
+      if (!bounds.intersects(featBounds)) continue;
+
+      // Calcular tamaño en píxeles
+      const sw = map.latLngToContainerPoint(featBounds.getSouthWest());
+      const ne = map.latLngToContainerPoint(featBounds.getNorthEast());
+      const pixelArea = Math.abs((ne.x - sw.x) * (sw.y - ne.y));
+      if (pixelArea < minPixelArea) continue;
+
+      const center = featBounds.getCenter();
+      const label = L.tooltip({
+        permanent: true, direction: 'center',
+        className: 'lc-label' + (claseTam ? ' ' + claseTam : ''),
+        opacity: 1
+      }).setLatLng(center).setContent(s.lc_medio_avg.toFixed(1) + '%');
+      label.addTo(map);
+      etiquetas.push(label);
+    } catch(e) {}
   }
 }
 

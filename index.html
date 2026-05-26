@@ -21,12 +21,8 @@
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid #e8e8ec;
   }
-  .header-titulo h1 {
-    margin: 0; font-size: 18px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.2px;
-  }
-  .header-titulo p {
-    margin: 3px 0 0 0; font-size: 12px; color: #888; font-weight: 400;
-  }
+  .header-titulo h1 { margin: 0; font-size: 18px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.2px; }
+  .header-titulo p { margin: 3px 0 0 0; font-size: 12px; color: #888; font-weight: 400; }
   .header-logo {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     font-weight: 800; font-size: 17px; letter-spacing: 1px; color: #1a1a1a;
@@ -36,26 +32,19 @@
     content: ''; display: inline-block; width: 6px; height: 20px;
     background: #c8102e; margin-left: 4px;
   }
-  .header-logo .sub {
-    font-weight: 300; font-size: 11px; letter-spacing: 1.4px; color: #666;
-  }
+  .header-logo .sub { font-weight: 300; font-size: 11px; letter-spacing: 1.4px; color: #666; }
   .filtros-row {
     background: white; padding: 14px 32px;
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
     border-bottom: 1px solid #e8e8ec;
   }
-  .filtros-row.row-2 {
-    grid-template-columns: 1fr;
-    padding-top: 0; padding-bottom: 16px;
-  }
+  .filtros-row.row-2 { grid-template-columns: 1fr; padding-top: 0; padding-bottom: 16px; }
   .filtro select {
     appearance: none; -webkit-appearance: none;
     background: white url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8.5L1.5 4h9z'/%3E%3C/svg%3E") no-repeat right 12px center;
     border: 1px solid #d6d8dc; border-radius: 6px;
-    padding: 10px 36px 10px 14px;
-    font-size: 13px; color: #333; cursor: pointer;
-    width: 100%;
-    transition: border-color .15s;
+    padding: 10px 36px 10px 14px; font-size: 13px; color: #333; cursor: pointer;
+    width: 100%; transition: border-color .15s;
   }
   .filtro select:hover { border-color: #999; }
   .filtro select:focus { outline: none; border-color: #1F4E78; box-shadow: 0 0 0 3px rgba(31,78,120,.1); }
@@ -64,10 +53,8 @@
     gap: 20px; padding: 20px 32px 12px 32px;
   }
   .mapa-wrap {
-    position: relative;
-    background: white; border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    overflow: hidden;
+    position: relative; background: white; border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden;
   }
   #map { width: 100%; height: 560px; }
   .mapa-titulo {
@@ -83,35 +70,25 @@
     background: white; padding: 18px 16px;
     border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
   }
-  .kpi-label {
-    font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500;
-  }
+  .kpi-label { font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
   .kpi-valor {
     font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1;
     letter-spacing: -0.5px;
   }
-  .kpi-extra {
-    font-size: 11px; color: #999; margin-top: 4px;
-  }
-  /* Leyenda continua */
+  .kpi-extra { font-size: 11px; color: #999; margin-top: 4px; }
   .legend {
     background: white; padding: 10px 12px;
     border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.15);
-    font-size: 11px; line-height: 1.5;
-    min-width: 140px;
+    font-size: 11px; line-height: 1.5; min-width: 140px;
   }
   .legend .titulo { font-weight: 700; margin-bottom: 6px; color: #333; font-size: 11px; }
   .legend-bar {
     height: 10px;
     background: linear-gradient(to right, #1a9850 0%, #91cf60 20%, #d9ef8b 40%, #fee08b 60%, #fc8d59 80%, #d73027 100%);
-    border-radius: 2px;
-    margin-bottom: 4px;
+    border-radius: 2px; margin-bottom: 4px;
     border: 1px solid rgba(0,0,0,.1);
   }
-  .legend-labels {
-    display: flex; justify-content: space-between;
-    font-size: 10px; color: #666;
-  }
+  .legend-labels { display: flex; justify-content: space-between; font-size: 10px; color: #666; }
   .legend-sin-dato {
     margin-top: 6px; font-size: 10px; color: #666;
     display: flex; align-items: center; gap: 6px;
@@ -120,7 +97,6 @@
     display: inline-block; width: 14px; height: 10px;
     background: #e6e6e6; border: 1px solid rgba(0,0,0,.1);
   }
-  /* Etiquetas LC dentro de polígonos */
   .leaflet-tooltip.lc-label {
     background: rgba(255,255,255,.92); border: 1px solid rgba(0,0,0,.15);
     color: #1a1a1a; font-weight: 700; font-size: 10px;
@@ -130,26 +106,20 @@
   .leaflet-tooltip.lc-label:before { display: none; }
   .leaflet-tooltip.lc-label.label-grande { font-size: 12px; padding: 2px 7px; }
   .leaflet-tooltip.lc-label.label-chico { font-size: 9px; padding: 1px 3px; }
-
-  /* Popup */
   .leaflet-popup-content { margin: 12px 14px; min-width: 220px; }
-  .popup-tabla h4 {
-    margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a; font-weight: 700;
-  }
+  .popup-tabla h4 { margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a; font-weight: 700; }
   .popup-tabla .sub { color: #888; font-size: 11px; margin-bottom: 8px; }
   .popup-tabla table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .popup-tabla td { padding: 3px 0; }
   .popup-tabla td:first-child { color: #666; }
   .popup-tabla td:last-child { font-weight: 600; text-align: right; color: #1a1a1a; }
   .popup-tabla tr.destacado td { color: #1F4E78; font-weight: 700; padding-top: 6px; border-top: 1px solid #e8e8ec; }
-
   .disclaimer {
     padding: 0 32px 20px 32px;
     font-size: 11px; color: #888; line-height: 1.5;
     border-top: 1px solid #e8e8ec; padding-top: 14px; margin-top: 8px;
   }
   .disclaimer strong { color: #555; }
-
   #status {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,.78); color: white;
@@ -157,7 +127,6 @@
     z-index: 9999; transition: opacity .3s;
   }
   #status.hidden { opacity: 0; pointer-events: none; }
-
   @media (max-width: 900px) {
     .main { grid-template-columns: 1fr; }
     .kpis { flex-direction: row; flex-wrap: wrap; }
@@ -218,24 +187,17 @@
 <div id="status">Cargando datos…</div>
 
 <script>
-const GEOJSON_URL = 'https://raw.githubusercontent.com/fransalari/coberturas-agro/main/admin_boundaries_vf.json';
+const GEOJSON_URL = 'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json';
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRHau9l0Q5QoFaQn-ASEMucWy1h80s3P4I-gFD9sjX-x0owntDmr8fBIAE_TpNwlyCdrZ-oxdBsrkKe/pub?output=csv';
-
-// Si la URL del repo cambió, ajustar aquí. Detectar automáticamente desde el ubicación actual:
-const GEOJSON_URL_FALLBACK = 'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json';
-
 const ESCENARIO_DEFAULT = 'N (dinámico)';
 
-// ====== ESCALA DE COLOR CONTINUA (rojo→amarillo→verde, semáforo invertido) ======
-// Verde = baja variabilidad (bueno), Rojo = alta variabilidad (riesgo)
-// Paleta tipo RdYlGn invertida (típica para riesgo)
 const PALETA = [
-  { stop: 0.00, color: [26, 152, 80] },     // #1a9850 verde fuerte
-  { stop: 0.20, color: [145, 207, 96] },    // #91cf60 verde claro
-  { stop: 0.40, color: [217, 239, 139] },   // #d9ef8b amarillo verdoso
-  { stop: 0.60, color: [254, 224, 139] },   // #fee08b amarillo
-  { stop: 0.80, color: [252, 141, 89] },    // #fc8d59 naranja
-  { stop: 1.00, color: [215, 48, 39] }      // #d73027 rojo
+  { stop: 0.00, color: [26, 152, 80] },
+  { stop: 0.20, color: [145, 207, 96] },
+  { stop: 0.40, color: [217, 239, 139] },
+  { stop: 0.60, color: [254, 224, 139] },
+  { stop: 0.80, color: [252, 141, 89] },
+  { stop: 1.00, color: [215, 48, 39] }
 ];
 const COLOR_SIN_DATO = '#e6e6e6';
 
@@ -244,15 +206,62 @@ let csvData = [];
 let layerDeptos = null;
 let map = null;
 let etiquetas = [];
-
-// Min/max dinámicos del desvío (se calculan al filtrar)
-let desvioMin = 0, desvioMax = 0;
+let statsActuales = new Map();
+let desvioMin = 0, desvioMax = 1;
 
 const filtros = {
   provincia: '', departamento: '', cultivo: '', cobertura: '',
   escenario: ESCENARIO_DEFAULT
 };
 
+// ============================================================
+// PARSEO ROBUSTO DE NÚMEROS
+// ============================================================
+// Maneja:
+// - "3.12" → 3.12
+// - "3,12" → 3.12 (formato regional español)
+// - "1.234,56" → 1234.56
+// - "1,234.56" → 1234.56
+// - "3,12%" → 3.12
+// - "$1.234" → 1234
+// - "" / null / undefined → null
+function parseNum(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  let s = String(v).trim();
+  if (!s) return null;
+  // Quitar símbolos comunes
+  s = s.replace(/[%$\s]/g, '');
+  // Detectar formato: si tiene tanto coma como punto, el último es decimal
+  const lastDot = s.lastIndexOf('.');
+  const lastComma = s.lastIndexOf(',');
+  if (lastDot >= 0 && lastComma >= 0) {
+    // Ambos presentes: el último es el separador decimal
+    if (lastComma > lastDot) {
+      // Formato europeo: 1.234,56
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      // Formato anglo: 1,234.56
+      s = s.replace(/,/g, '');
+    }
+  } else if (lastComma >= 0) {
+    // Solo coma: asumir decimal español
+    s = s.replace(',', '.');
+  }
+  // Si solo punto, ya está bien
+  const n = parseFloat(s);
+  return isFinite(n) ? n : null;
+}
+
+// Normaliza nombres de columnas: quita BOM, lowercase, trim
+function normalizarHeader(h) {
+  if (!h) return '';
+  return String(h).replace(/^\ufeff/, '').trim().toLowerCase();
+}
+
+// ============================================================
+// INIT
+// ============================================================
 async function init() {
   initMap();
   try {
@@ -273,11 +282,9 @@ function initMap() {
     attribution: '© OpenStreetMap · CARTO', subdomains: 'abcd', maxZoom: 18
   }).addTo(map);
 
-  // Leyenda continua
   const legend = L.control({ position: 'bottomright' });
   legend.onAdd = function() {
     const div = L.DomUtil.create('div', 'legend');
-    div.id = 'leyenda-mapa';
     div.innerHTML = `
       <div class="titulo">Variabilidad LC (desvío)</div>
       <div class="legend-bar"></div>
@@ -286,25 +293,17 @@ function initMap() {
         <span id="leg-mid">—</span>
         <span>Alta</span>
       </div>
-      <div class="legend-sin-dato"><i></i>Sin datos</div>
-    `;
+      <div class="legend-sin-dato"><i></i>Sin datos</div>`;
     return div;
   };
   legend.addTo(map);
-
-  // Re-renderizar etiquetas al hacer zoom (cambia el tamaño según escala)
-  map.on('zoomend', actualizarEtiquetas);
+  map.on('zoomend moveend', actualizarEtiquetas);
 }
 
 async function cargarDatos() {
   setStatus('Descargando mapa…');
-  let geoResp;
-  try {
-    geoResp = await fetch(GEOJSON_URL);
-    if (!geoResp.ok) throw new Error('falló URL principal');
-  } catch(_) {
-    geoResp = await fetch(GEOJSON_URL_FALLBACK);
-  }
+  const geoResp = await fetch(GEOJSON_URL);
+  if (!geoResp.ok) throw new Error(`GeoJSON ${geoResp.status}`);
   geojsonData = await geoResp.json();
   if (geojsonData.type === 'Topology') {
     await cargarScript('https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js');
@@ -314,10 +313,44 @@ async function cargarDatos() {
 
   setStatus('Descargando datos…');
   const csvResp = await fetch(CSV_URL);
-  if (!csvResp.ok) throw new Error(`CSV no accesible (${csvResp.status}). Verificá la publicación.`);
+  if (!csvResp.ok) throw new Error(`CSV ${csvResp.status}. ¿Está publicado?`);
   const csvText = await csvResp.text();
-  const parsed = Papa.parse(csvText, { header: true, dynamicTyping: true, skipEmptyLines: true });
-  csvData = parsed.data.filter(r => r.geo_id != null);
+
+  // Parsear SIN dynamicTyping para tener control total sobre la conversión
+  const parsed = Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: normalizarHeader
+  });
+
+  console.log('=== Columnas detectadas en el CSV ===', parsed.meta.fields);
+  console.log('=== Primera fila cruda ===', parsed.data[0]);
+
+  // Convertir tipos manualmente
+  const camposNumericos = [
+    'geo_id', 'registros', 'anios_considerados', 'hectareas', 'suma_asegurada',
+    'lc_medio_pct', 'lc_max_pct', 'desvio_lc_pct',
+    'adic_cat_historico_pct', 'adic_cat_prorrateado_pct',
+    'lc_mas_cat_pct', 'tasa_comercial_pct',
+    'n_anios_cat', 'n_divisor'
+  ];
+
+  csvData = parsed.data
+    .map(row => {
+      const out = { ...row };
+      for (const k of camposNumericos) {
+        if (k in out) out[k] = parseNum(out[k]);
+      }
+      // n_anios_cat lo mantenemos como string también para el filtro
+      // (puede ser "N (dinámico)" o números)
+      out.n_anios_cat_str = String(row.n_anios_cat || '').trim();
+      return out;
+    })
+    .filter(r => r.geo_id != null);
+
+  console.log('=== Primera fila parseada ===', csvData[0]);
+  console.log('=== Total filas válidas ===', csvData.length);
+
   setStatus(`${csvData.length.toLocaleString('es-AR')} filas cargadas`);
 }
 
@@ -334,18 +367,17 @@ function popularFiltros() {
   for (const r of csvData) {
     if (r.provincia) provs.add(r.provincia);
     if (r.cultivo) cults.add(r.cultivo);
-    if (r.n_anios_cat != null && r.n_anios_cat !== '') escenarios.add(String(r.n_anios_cat));
+    if (r.n_anios_cat_str) escenarios.add(r.n_anios_cat_str);
   }
   fillSelect('f-provincia', [...provs].sort(), 'Provincia');
   fillSelect('f-cultivo', [...cults].sort(), 'Cultivo');
 
-  // Escenarios: dinámico primero, luego numéricos ascendentes
   const escArr = [...escenarios].sort((a,b) => {
     if (a === ESCENARIO_DEFAULT) return -1;
     if (b === ESCENARIO_DEFAULT) return 1;
     const na = parseFloat(a), nb = parseFloat(b);
     if (!isNaN(na) && !isNaN(nb)) return na - nb;
-    return String(a).localeCompare(String(b));
+    return a.localeCompare(b);
   });
   const selEsc = document.getElementById('f-escenario');
   selEsc.innerHTML = '';
@@ -354,11 +386,7 @@ function popularFiltros() {
     opt.value = e;
     let label = e;
     if (e === ESCENARIO_DEFAULT) label = 'N (dinámico) — años reales';
-    else if (e === '5') label = 'CAT en 5 años';
-    else if (e === '10') label = 'CAT en 10 años';
-    else if (e === '15') label = 'CAT en 15 años';
-    else if (e === '20') label = 'CAT en 20 años';
-    else label = `CAT en ${e} años`;
+    else if (/^\d+$/.test(e)) label = `CAT en ${e} años`;
     opt.textContent = label;
     selEsc.appendChild(opt);
   }
@@ -406,29 +434,22 @@ function actualizarCoberturas() {
 
 function setupEventListeners() {
   document.getElementById('f-provincia').addEventListener('change', e => {
-    filtros.provincia = e.target.value;
-    filtros.departamento = '';
-    actualizarDepartamentos();
-    actualizarCoberturas();
-    refrescar();
+    filtros.provincia = e.target.value; filtros.departamento = '';
+    actualizarDepartamentos(); actualizarCoberturas(); refrescar();
   });
   document.getElementById('f-departamento').addEventListener('change', e => {
     filtros.departamento = e.target.value;
-    actualizarCoberturas();
-    refrescar();
+    actualizarCoberturas(); refrescar();
   });
   document.getElementById('f-cultivo').addEventListener('change', e => {
     filtros.cultivo = e.target.value;
-    actualizarCoberturas();
-    refrescar();
+    actualizarCoberturas(); refrescar();
   });
   document.getElementById('f-cobertura').addEventListener('change', e => {
-    filtros.cobertura = e.target.value;
-    refrescar();
+    filtros.cobertura = e.target.value; refrescar();
   });
   document.getElementById('f-escenario').addEventListener('change', e => {
-    filtros.escenario = e.target.value;
-    refrescar();
+    filtros.escenario = e.target.value; refrescar();
   });
 }
 
@@ -438,7 +459,7 @@ function filtrarFilas() {
     if (filtros.departamento && r.departamento !== filtros.departamento) return false;
     if (filtros.cultivo && r.cultivo !== filtros.cultivo) return false;
     if (filtros.cobertura && r.cobertura !== filtros.cobertura) return false;
-    if (filtros.escenario && String(r.n_anios_cat) !== String(filtros.escenario)) return false;
+    if (filtros.escenario && r.n_anios_cat_str !== filtros.escenario) return false;
     return true;
   });
 }
@@ -457,16 +478,16 @@ function agregarPorGeoID(filas) {
       });
     }
     const s = out.get(gid);
-    if (typeof r.lc_medio_pct === 'number') s.lc_medio.push(r.lc_medio_pct);
-    if (typeof r.lc_max_pct === 'number') s.lc_max.push(r.lc_max_pct);
-    if (typeof r.desvio_lc_pct === 'number') s.desvio_lc.push(r.desvio_lc_pct);
-    if (typeof r.adic_cat_prorrateado_pct === 'number') s.adic_cat_p.push(r.adic_cat_prorrateado_pct);
-    if (typeof r.lc_mas_cat_pct === 'number') s.lc_mas_cat.push(r.lc_mas_cat_pct);
-    if (typeof r.tasa_comercial_pct === 'number') s.referencia.push(r.tasa_comercial_pct);
-    if (typeof r.hectareas === 'number') s.hectareas += r.hectareas;
-    if (typeof r.suma_asegurada === 'number') s.suma_asegurada += r.suma_asegurada;
-    if (typeof r.registros === 'number') s.registros.push(r.registros);
-    if (typeof r.anios_considerados === 'number') s.anios.push(r.anios_considerados);
+    if (r.lc_medio_pct != null) s.lc_medio.push(r.lc_medio_pct);
+    if (r.lc_max_pct != null) s.lc_max.push(r.lc_max_pct);
+    if (r.desvio_lc_pct != null) s.desvio_lc.push(r.desvio_lc_pct);
+    if (r.adic_cat_prorrateado_pct != null) s.adic_cat_p.push(r.adic_cat_prorrateado_pct);
+    if (r.lc_mas_cat_pct != null) s.lc_mas_cat.push(r.lc_mas_cat_pct);
+    if (r.tasa_comercial_pct != null) s.referencia.push(r.tasa_comercial_pct);
+    if (r.hectareas != null) s.hectareas += r.hectareas;
+    if (r.suma_asegurada != null) s.suma_asegurada += r.suma_asegurada;
+    if (r.registros != null) s.registros.push(r.registros);
+    if (r.anios_considerados != null) s.anios.push(r.anios_considerados);
   }
   const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
   for (const s of out.values()) {
@@ -487,16 +508,16 @@ function calcularKPIs(filas) {
   let sumWLC = 0, sumWCAT = 0, sumWRef = 0, sumW = 0;
   let sumLC = 0, sumCAT = 0, sumRef = 0, nLC = 0, nCAT = 0, nRef = 0;
   for (const r of filas) {
-    const w = (typeof r.hectareas === 'number' && r.hectareas > 0) ? r.hectareas : 0;
-    if (typeof r.lc_medio_pct === 'number') {
+    const w = (r.hectareas != null && r.hectareas > 0) ? r.hectareas : 0;
+    if (r.lc_medio_pct != null) {
       sumLC += r.lc_medio_pct; nLC++;
       if (w) { sumWLC += r.lc_medio_pct * w; sumW += w; }
     }
-    if (typeof r.lc_mas_cat_pct === 'number') {
+    if (r.lc_mas_cat_pct != null) {
       sumCAT += r.lc_mas_cat_pct; nCAT++;
       if (w) sumWCAT += r.lc_mas_cat_pct * w;
     }
-    if (typeof r.tasa_comercial_pct === 'number') {
+    if (r.tasa_comercial_pct != null) {
       sumRef += r.tasa_comercial_pct; nRef++;
       if (w) sumWRef += r.tasa_comercial_pct * w;
     }
@@ -509,18 +530,16 @@ function calcularKPIs(filas) {
   };
 }
 
-// ====== ESCALA DE COLOR CONTINUA ======
 function interpColor(t) {
-  // t en [0,1] → color hex
   if (t == null || isNaN(t)) return COLOR_SIN_DATO;
   t = Math.max(0, Math.min(1, t));
   for (let i = 0; i < PALETA.length - 1; i++) {
     const a = PALETA[i], b = PALETA[i+1];
     if (t >= a.stop && t <= b.stop) {
-      const localT = (t - a.stop) / (b.stop - a.stop);
-      const r = Math.round(a.color[0] + (b.color[0] - a.color[0]) * localT);
-      const g = Math.round(a.color[1] + (b.color[1] - a.color[1]) * localT);
-      const bl = Math.round(a.color[2] + (b.color[2] - a.color[2]) * localT);
+      const lt = (t - a.stop) / (b.stop - a.stop);
+      const r = Math.round(a.color[0] + (b.color[0] - a.color[0]) * lt);
+      const g = Math.round(a.color[1] + (b.color[1] - a.color[1]) * lt);
+      const bl = Math.round(a.color[2] + (b.color[2] - a.color[2]) * lt);
       return `rgb(${r},${g},${bl})`;
     }
   }
@@ -530,28 +549,20 @@ function interpColor(t) {
 function colorPorDesvio(v) {
   if (v == null || isNaN(v)) return COLOR_SIN_DATO;
   if (desvioMax === desvioMin) return interpColor(0.5);
-  // Usar percentiles para evitar outliers: capear al rango [min, max] calculado
   const t = (v - desvioMin) / (desvioMax - desvioMin);
   return interpColor(t);
 }
 
-// Calcula min/max de desvío para la escala dinámica
-// Usa percentiles 5% y 95% para evitar que un outlier achate toda la escala
 function calcularRangoDesvio(stats) {
-  const valores = [];
+  const vals = [];
   for (const s of stats.values()) {
-    if (typeof s.desvio_lc_avg === 'number') valores.push(s.desvio_lc_avg);
+    if (typeof s.desvio_lc_avg === 'number' && isFinite(s.desvio_lc_avg)) vals.push(s.desvio_lc_avg);
   }
-  if (valores.length === 0) { desvioMin = 0; desvioMax = 1; return; }
-  valores.sort((a,b) => a-b);
-  const pct5  = valores[Math.floor(valores.length * 0.05)];
-  const pct95 = valores[Math.floor(valores.length * 0.95)];
-  desvioMin = pct5;
-  desvioMax = pct95;
-  // Asegurar rango no degenerado
+  if (!vals.length) { desvioMin = 0; desvioMax = 1; return; }
+  vals.sort((a,b) => a-b);
+  desvioMin = vals[Math.floor(vals.length * 0.05)];
+  desvioMax = vals[Math.floor(vals.length * 0.95)];
   if (desvioMax <= desvioMin) desvioMax = desvioMin + 0.01;
-
-  // Actualizar leyenda
   const mid = document.getElementById('leg-mid');
   if (mid) mid.textContent = ((desvioMin + desvioMax) / 2).toFixed(1) + '%';
 }
@@ -559,8 +570,6 @@ function calcularRangoDesvio(stats) {
 const fmtPct = v => (v==null||isNaN(v)) ? '—' : v.toFixed(2) + '%';
 const fmtNum = v => (v==null||isNaN(v)) ? '—' : Math.round(v).toLocaleString('es-AR');
 const fmtMoney = v => (v==null||isNaN(v)) ? '—' : '$' + Math.round(v).toLocaleString('es-AR');
-
-let statsActuales = new Map();  // cache para actualizar etiquetas con zoom
 
 function refrescar() {
   if (!geojsonData) return;
@@ -573,7 +582,6 @@ function refrescar() {
   document.getElementById('kpi-cat').textContent = fmtPct(kpis.cat);
   document.getElementById('kpi-ref').textContent = fmtPct(kpis.ref);
 
-  // Calcular rango de desvío para la escala continua
   calcularRangoDesvio(stats);
 
   if (layerDeptos) map.removeLayer(layerDeptos);
@@ -624,7 +632,6 @@ function refrescar() {
     }
   }).addTo(map);
 
-  // Zoom según filtros
   if (filtros.departamento) {
     const feat = geojsonData.features.find(f => {
       const d = f.properties.nam_dpto || f.properties.departamento;
@@ -648,50 +655,36 @@ function refrescar() {
     map.setView([-35, -64], 5);
   }
 
-  // Las etiquetas se renderizan después del zoom
-  setTimeout(actualizarEtiquetas, 100);
+  setTimeout(actualizarEtiquetas, 150);
 }
 
-// Renderiza etiquetas según el zoom actual y los polígonos visibles en pantalla
 function actualizarEtiquetas() {
   if (!layerDeptos || !geojsonData) return;
-
-  // Limpiar etiquetas existentes
   etiquetas.forEach(e => map.removeLayer(e));
   etiquetas = [];
 
   const zoom = map.getZoom();
   const bounds = map.getBounds();
-
-  // En zoom muy bajo no mostrar nada (sería ilegible)
   if (zoom < 5) return;
 
-  // Tamaño de fuente según zoom
   let claseTam = '';
   if (zoom >= 8) claseTam = 'label-grande';
   else if (zoom <= 5) claseTam = 'label-chico';
 
-  // Para evitar sobrecargar, en zoom bajo sólo mostrar polígonos GRANDES
-  // (Calculamos el área aproximada del bounding box en pantalla)
   const minPixelArea = zoom < 6 ? 3000 : (zoom < 7 ? 1500 : 800);
 
   for (const feature of geojsonData.features) {
     const gid = feature.properties.gid_dpto || feature.properties.GeoID;
     const s = statsActuales.get(gid);
     if (!s || s.lc_medio_avg == null) continue;
-
-    // Verificar que el polígono esté visible
     try {
       const layer = L.geoJSON(feature);
       const featBounds = layer.getBounds();
       if (!bounds.intersects(featBounds)) continue;
-
-      // Calcular tamaño en píxeles
       const sw = map.latLngToContainerPoint(featBounds.getSouthWest());
       const ne = map.latLngToContainerPoint(featBounds.getNorthEast());
       const pixelArea = Math.abs((ne.x - sw.x) * (sw.y - ne.y));
       if (pixelArea < minPixelArea) continue;
-
       const center = featBounds.getCenter();
       const label = L.tooltip({
         permanent: true, direction: 'center',

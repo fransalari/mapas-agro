@@ -348,17 +348,114 @@ function cargarScript(src) {
   });
 }
 
-function popularFiltros() {
-  const provs = new Set(), cults = new Set(), escenarios = new Set();
+// Cuenta CASOS reales por valor de campo. Cada combinación única
+// (Prov+Depto+Cultivo+Cobertura) aparece en 5 filas (una por escenario)
+// con el MISMO valor de `registros`. Tomamos UNA fila por combinación
+// y sumamos su columna `registros` (la cantidad real de casos en la BD).
+function contarPorCampo(campo, ignorar = []) {
+  const conteo = new Map();
+  const vistos = new Set();
   for (const r of csvData) {
-    if (r.provincia) provs.add(r.provincia);
-    if (r.cultivo) cults.add(r.cultivo);
-    if (r.n_anios_cat_str) escenarios.add(r.n_anios_cat_str);
-  }
-  fillSelect('f-provincia', [...provs].sort(), 'Provincia');
-  fillSelect('f-cultivo', [...cults].sort(), 'Cultivo');
+    if (campo !== 'provincia' && !ignorar.includes('provincia')
+        && filtros.provincia && r.provincia !== filtros.provincia) continue;
+    if (campo !== 'departamento' && !ignorar.includes('departamento')
+        && filtros.departamento && r.departamento !== filtros.departamento) continue;
+    if (campo !== 'cultivo' && !ignorar.includes('cultivo')
+        && filtros.cultivo && r.cultivo !== filtros.cultivo) continue;
+    if (campo !== 'cobertura' && !ignorar.includes('cobertura')
+        && filtros.cobertura && r.cobertura !== filtros.cobertura) continue;
 
-  const escArr = [...escenarios].sort((a,b) => {
+    const valor = r[campo];
+    if (!valor) continue;
+
+    // Una sola fila por combinación única (evita contar 5 veces por escenario)
+    const claveCombo = `${r.provincia}||${r.departamento}||${r.cultivo}||${r.cobertura}`;
+    if (vistos.has(claveCombo)) continue;
+    vistos.add(claveCombo);
+
+    // Sumar los registros REALES (Cant. de Casos)
+    const casos = (typeof r.registros === 'number' && r.registros > 0) ? r.registros : 1;
+    conteo.set(valor, (conteo.get(valor) || 0) + casos);
+  }
+  return conteo;
+}
+
+function popularFiltros() {
+  actualizarEscenarios();
+  actualizarProvincias();
+  actualizarDepartamentos();
+  actualizarCultivos();
+  actualizarCoberturas();
+}
+
+// Llena un <select> con opciones ordenadas por cantidad descendente,
+// mostrando "Etiqueta (count)" en cada opción.
+function fillSelectConConteo(id, conteo, placeholder, valorActual = '') {
+  const sel = document.getElementById(id);
+  // Total de casos (suma de todos los conteos) para el placeholder
+  let total = 0;
+  for (const v of conteo.values()) total += v;
+
+  sel.innerHTML = `<option value="">${placeholder} (${total.toLocaleString('es-AR')})</option>`;
+
+  // Ordenar por cantidad descendente, y a igualdad alfabético
+  const entradas = [...conteo.entries()].sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1];
+    return a[0].localeCompare(b[0], 'es');
+  });
+
+  for (const [valor, n] of entradas) {
+    const opt = document.createElement('option');
+    opt.value = valor;
+    opt.textContent = `${valor} (${n.toLocaleString('es-AR')})`;
+    sel.appendChild(opt);
+  }
+
+  // Restaurar selección si todavía existe
+  if (valorActual && [...conteo.keys()].includes(valorActual)) {
+    sel.value = valorActual;
+  }
+}
+
+function actualizarProvincias() {
+  const sel = document.getElementById('f-provincia');
+  const val = sel.value;
+  // Para provincias, ignorar el filtro de provincia (obvio)
+  // pero respetar los demás filtros activos
+  const conteo = contarPorCampo('provincia');
+  fillSelectConConteo('f-provincia', conteo, 'Provincia', val);
+}
+
+function actualizarDepartamentos() {
+  const sel = document.getElementById('f-departamento');
+  const val = sel.value;
+  const conteo = contarPorCampo('departamento');
+  fillSelectConConteo('f-departamento', conteo, 'Departamento', val);
+}
+
+function actualizarCultivos() {
+  const sel = document.getElementById('f-cultivo');
+  const val = sel.value;
+  const conteo = contarPorCampo('cultivo');
+  fillSelectConConteo('f-cultivo', conteo, 'Cultivo', val);
+}
+
+function actualizarEscenarios() {
+  const conteoEsc = new Map();
+  const vistosEsc = new Set();
+  for (const r of csvData) {
+    if (filtros.provincia && r.provincia !== filtros.provincia) continue;
+    if (filtros.departamento && r.departamento !== filtros.departamento) continue;
+    if (filtros.cultivo && r.cultivo !== filtros.cultivo) continue;
+    if (filtros.cobertura && r.cobertura !== filtros.cobertura) continue;
+    if (!r.n_anios_cat_str) continue;
+    const claveCombo = `${r.provincia}||${r.departamento}||${r.cultivo}||${r.cobertura}||${r.n_anios_cat_str}`;
+    if (vistosEsc.has(claveCombo)) continue;
+    vistosEsc.add(claveCombo);
+    const casos = (typeof r.registros === 'number' && r.registros > 0) ? r.registros : 1;
+    conteoEsc.set(r.n_anios_cat_str, (conteoEsc.get(r.n_anios_cat_str) || 0) + casos);
+  }
+  const escArr = [...conteoEsc.keys()].sort((a,b) => {
     if (a === ESCENARIO_DEFAULT) return -1;
     if (b === ESCENARIO_DEFAULT) return 1;
     const na = parseFloat(a), nb = parseFloat(b);
@@ -366,6 +463,7 @@ function popularFiltros() {
     return a.localeCompare(b);
   });
   const selEsc = document.getElementById('f-escenario');
+  const valActual = selEsc.value || filtros.escenario;
   selEsc.innerHTML = '';
   for (const e of escArr) {
     const opt = document.createElement('option');
@@ -373,66 +471,35 @@ function popularFiltros() {
     let label = e;
     if (e === ESCENARIO_DEFAULT) label = 'Reserva CAT Dinámica';
     else if (/^\d+$/.test(e)) label = `Reserva CAT ${e} años`;
-    opt.textContent = label;
+    const n = conteoEsc.get(e) || 0;
+    opt.textContent = `${label} (${n.toLocaleString('es-AR')})`;
     selEsc.appendChild(opt);
   }
-  selEsc.value = filtros.escenario;
-
-  actualizarDepartamentos();
-  actualizarCoberturas();
-}
-
-function fillSelect(id, values, placeholder) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = `<option value="">${placeholder}</option>`;
-  for (const v of values) {
-    const opt = document.createElement('option');
-    opt.value = v; opt.textContent = v;
-    sel.appendChild(opt);
-  }
-}
-
-function actualizarDepartamentos() {
-  const deptos = new Set();
-  for (const r of csvData) {
-    if (filtros.provincia && r.provincia !== filtros.provincia) continue;
-    if (r.departamento) deptos.add(r.departamento);
-  }
-  const sel = document.getElementById('f-departamento');
-  const val = sel.value;
-  fillSelect('f-departamento', [...deptos].sort(), 'Departamento');
-  if ([...deptos].includes(val)) sel.value = val;
+  if ([...conteoEsc.keys()].includes(valActual)) selEsc.value = valActual;
 }
 
 function actualizarCoberturas() {
-  const cobs = new Set();
-  for (const r of csvData) {
-    if (filtros.provincia && r.provincia !== filtros.provincia) continue;
-    if (filtros.departamento && r.departamento !== filtros.departamento) continue;
-    if (filtros.cultivo && r.cultivo !== filtros.cultivo) continue;
-    if (r.cobertura) cobs.add(r.cobertura);
-  }
   const sel = document.getElementById('f-cobertura');
   const val = sel.value;
-  fillSelect('f-cobertura', [...cobs].sort(), 'Cobertura');
-  if ([...cobs].includes(val)) sel.value = val;
+  const conteo = contarPorCampo('cobertura');
+  fillSelectConConteo('f-cobertura', conteo, 'Cobertura', val);
 }
 
 function setupEventListeners() {
   document.getElementById('f-provincia').addEventListener('change', e => {
     filtros.provincia = e.target.value; filtros.departamento = '';
-    actualizarDepartamentos(); actualizarCoberturas(); refrescar();
+    actualizarDepartamentos(); actualizarCultivos(); actualizarCoberturas(); actualizarEscenarios(); refrescar();
   });
   document.getElementById('f-departamento').addEventListener('change', e => {
     filtros.departamento = e.target.value;
-    actualizarCoberturas(); refrescar();
+    actualizarCultivos(); actualizarCoberturas(); actualizarEscenarios(); refrescar();
   });
   document.getElementById('f-cultivo').addEventListener('change', e => {
     filtros.cultivo = e.target.value;
-    actualizarCoberturas(); refrescar();
+    actualizarCoberturas(); actualizarEscenarios(); refrescar();
   });
   document.getElementById('f-cobertura').addEventListener('change', e => {
-    filtros.cobertura = e.target.value; refrescar();
+    filtros.cobertura = e.target.value; actualizarEscenarios(); refrescar();
   });
   document.getElementById('f-escenario').addEventListener('change', e => {
     filtros.escenario = e.target.value; refrescar();
@@ -645,7 +712,7 @@ function refrescar() {
             <h4>${nomDpto}</h4>
             <div class="sub">${nomProv}</div>
             <table>
-              <tr><td>Cant. de Opciones</td>           <td>${fmtNum(s.cant_casos)}</td></tr>
+              <tr><td>Cant. de Casos</td>           <td>${fmtNum(s.cant_casos)}</td></tr>
               <tr><td>Años considerados con casos</td><td>${s.anios_avg ? s.anios_avg.toFixed(1) : '—'}</td></tr>
               <tr><td>Hectáreas (total)</td>        <td>${fmtNum(s.hectareas)}</td></tr>
               <tr><td>LC Histórico Pond. Ha.</td>   <td>${fmtPct(s.lc_medio_avg)}</td></tr>

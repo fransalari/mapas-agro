@@ -1,604 +1,542 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAGH GESTION · Cálculo de Tasa de Riesgo</title>
 
-<meta charset="utf-8"/>
-
-<title>MAPA GIS DE TASAS</title>
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
-/>
-
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet/dist/leaflet.css"
-/>
-
-<style>
-
-html,
-body {
-
-  margin: 0;
-  padding: 0;
-
-  width: 100%;
-  height: 100%;
-
-  overflow: hidden;
-
-  font-family: Arial, sans-serif;
-
-}
-
-#map {
-
-  width: 100vw;
-  height: 100vh;
-
-}
-
-.leaflet-popup-content {
-
-  font-size: 13px;
-  line-height: 1.5;
-
-}
-
-.legend {
-
-  background: white;
-  padding: 10px;
-  border-radius: 8px;
-
-  line-height: 20px;
-
-  box-shadow:
-    0 1px 5px rgba(0,0,0,0.3);
-
-}
-
-.legend i {
-
-  width: 18px;
-  height: 18px;
-
-  float: left;
-  margin-right: 8px;
-
-  opacity: 0.8;
-
-}
-
-.titleBox {
-
-  background: white;
-
-  padding:
-    8px 12px;
-
-  border-radius: 8px;
-
-  box-shadow:
-    0 1px 5px rgba(0,0,0,0.3);
-
-  font-weight: bold;
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div id="map"></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
+    background: #f5f6f8; color: #2a2a2a;
+  }
+  .header {
+    background: white; padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #e8e8ec;
+  }
+  .header-titulo h1 {
+    margin: 0; font-size: 18px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.2px;
+  }
+  .header-titulo p {
+    margin: 3px 0 0 0; font-size: 12px; color: #888; font-weight: 400;
+  }
+  .header-logo {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 800; font-size: 17px; letter-spacing: 1px; color: #1a1a1a;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .header-logo::after {
+    content: ''; display: inline-block; width: 6px; height: 20px;
+    background: #c8102e; margin-left: 4px;
+  }
+  .header-logo .sub {
+    font-weight: 300; font-size: 11px; letter-spacing: 1.4px; color: #666;
+  }
+  .filtros-row {
+    background: white; padding: 14px 32px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    border-bottom: 1px solid #e8e8ec;
+  }
+  .filtros-row.row-2 {
+    grid-template-columns: 1fr;
+    padding-top: 0; padding-bottom: 16px;
+  }
+  .filtro select {
+    appearance: none; -webkit-appearance: none;
+    background: white url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8.5L1.5 4h9z'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border: 1px solid #d6d8dc; border-radius: 6px;
+    padding: 10px 36px 10px 14px;
+    font-size: 13px; color: #333; cursor: pointer;
+    width: 100%;
+    transition: border-color .15s;
+  }
+  .filtro select:hover { border-color: #999; }
+  .filtro select:focus { outline: none; border-color: #1F4E78; box-shadow: 0 0 0 3px rgba(31,78,120,.1); }
+  .main {
+    display: grid; grid-template-columns: 1fr 200px;
+    gap: 20px; padding: 20px 32px 32px 32px;
+  }
+  .mapa-wrap {
+    position: relative;
+    background: white; border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    overflow: hidden;
+  }
+  #map { width: 100%; height: 560px; }
+  .mapa-titulo {
+    position: absolute; top: 14px; right: 14px;
+    background: rgba(255,255,255,.95);
+    padding: 5px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 700; color: #333;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    z-index: 400;
+  }
+  .kpis { display: flex; flex-direction: column; gap: 14px; }
+  .kpi {
+    background: white; padding: 18px 16px;
+    border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .kpi-label {
+    font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500;
+  }
+  .kpi-valor {
+    font-size: 30px; font-weight: 700; color: #1a1a1a; line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .kpi-extra {
+    font-size: 11px; color: #999; margin-top: 4px;
+  }
+  .legend {
+    background: white; padding: 8px 11px;
+    border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    font-size: 11px; line-height: 1.6;
+  }
+  .legend .titulo { font-weight: 700; margin-bottom: 4px; color: #333; font-size: 11px; }
+  .legend i {
+    display: inline-block; width: 14px; height: 11px; margin-right: 6px;
+    vertical-align: middle; border: 1px solid rgba(0,0,0,.1);
+  }
+  .leaflet-tooltip.lc-label {
+    background: rgba(255,255,255,.85); border: none;
+    color: #2a2a2a; font-weight: 700; font-size: 10px;
+    padding: 1px 4px; border-radius: 2px; box-shadow: none;
+    pointer-events: none;
+  }
+  .leaflet-tooltip.lc-label:before { display: none; }
+  .leaflet-popup-content { margin: 12px 14px; min-width: 220px; }
+  .popup-tabla h4 {
+    margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a; font-weight: 700;
+  }
+  .popup-tabla .sub { color: #888; font-size: 11px; margin-bottom: 8px; }
+  .popup-tabla table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .popup-tabla td { padding: 3px 0; }
+  .popup-tabla td:first-child { color: #666; }
+  .popup-tabla td:last-child { font-weight: 600; text-align: right; color: #1a1a1a; }
+  .popup-tabla tr.destacado td { color: #1F4E78; font-weight: 700; padding-top: 6px; border-top: 1px solid #e8e8ec; }
+  #status {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.78); color: white;
+    padding: 7px 16px; border-radius: 20px; font-size: 11px;
+    z-index: 9999; transition: opacity .3s;
+  }
+  #status.hidden { opacity: 0; pointer-events: none; }
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .kpis { flex-direction: row; flex-wrap: wrap; }
+    .kpi { flex: 1 1 calc(33% - 14px); min-width: 140px; }
+    .filtros-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-titulo">
+    <h1>Cálculo de tasa de riesgo histórico con 1 CAT</h1>
+    <p>Loss Cost medio + margen CAT histórico + gastos operativos, comerciales y administrativos</p>
+  </div>
+  <div class="header-logo">TAGH<span class="sub">GESTION</span></div>
+</div>
+
+<div class="filtros-row">
+  <div class="filtro"><select id="f-provincia"><option value="">Provincia</option></select></div>
+  <div class="filtro"><select id="f-departamento"><option value="">Departamento</option></select></div>
+  <div class="filtro"><select id="f-cultivo"><option value="">Cultivo</option></select></div>
+  <div class="filtro"><select id="f-escenario">
+    <option value="auto" selected>Escenario CAT (años reales)</option>
+    <option value="5">CAT en 5 años (conservador)</option>
+    <option value="10">CAT en 10 años (estándar)</option>
+    <option value="15">CAT en 15 años</option>
+    <option value="20">CAT en 20 años (agresivo)</option>
+  </select></div>
+</div>
+
+<div class="filtros-row row-2">
+  <div class="filtro"><select id="f-cobertura"><option value="">Cobertura</option></select></div>
+</div>
+
+<div class="main">
+  <div class="mapa-wrap">
+    <div class="mapa-titulo">GIS Agro</div>
+    <div id="map"></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">T. Técnica</div>
+      <div class="kpi-valor" id="kpi-tecnica">—</div>
+      <div class="kpi-extra">LC medio</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">T. con CAT</div>
+      <div class="kpi-valor" id="kpi-cat">—</div>
+      <div class="kpi-extra">LC + margen CAT</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">% T. Comercial</div>
+      <div class="kpi-valor" id="kpi-comercial">—</div>
+      <div class="kpi-extra">incl. 30% gastos</div>
+    </div>
+  </div>
+</div>
+
+<div id="status">Cargando datos…</div>
+
 <script>
+const GEOJSON_URL = 'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json';
+// IMPORTANTE: cambiá esta URL cuando publiques el sheet como CSV
+// Archivo → Compartir → Publicar en la web → Formato: Valores separados por comas (.csv) → Publicar
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRHau9l0Q5QoFaQn-ASEMucWy1h80s3P4I-gFD9sjX-x0owntDmr8fBIAE_TpNwlyCdrZ-oxdBsrkKe/pub?output=csv';
 
-// ======================================
-// URL FILTERS
-// ======================================
+const UMBRALES_DESVIO = { bajo: 3.0, alto: 8.0 };
+const COLORES = { bajo: '#67b26f', medio: '#f6c544', alto: '#e85d4a', sin_dato: '#e6e6e6' };
 
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
+let geojsonData = null;
+let csvData = [];
+let layerDeptos = null;
+let map = null;
+let etiquetas = [];
+const filtros = { provincia: '', departamento: '', cultivo: '', cobertura: '', escenario: 'auto' };
 
-const filtros = {
-
-  provincia:
-    params.get('provincia') || '',
-
-  departamento:
-    params.get('departamento') || '',
-
-  cultivo:
-    params.get('cultivo') || '',
-
-  cobertura:
-    params.get('cobertura') || '',
-
-  n_anios_cat:
-    params.get('n_anios_cat') || 'N (dinámico)'
-
-};
-
-console.log(
-  'Filtros:',
-  filtros
-);
-
-// ======================================
-// MAPA
-// ======================================
-
-const map =
-  L.map('map')
-    .setView([-35, -63], 5);
-
-L.tileLayer(
-
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-
-  {
-
-    attribution:
-      '&copy; OpenStreetMap'
-
+async function init() {
+  initMap();
+  try {
+    await cargarDatos();
+    popularFiltros();
+    setupEventListeners();
+    refrescar();
+    setStatus('', true);
+  } catch (e) {
+    setStatus('Error: ' + e.message);
+    console.error(e);
   }
+}
 
-).addTo(map);
+function initMap() {
+  map = L.map('map', { preferCanvas: true }).setView([-35, -64], 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap · CARTO', subdomains: 'abcd', maxZoom: 18
+  }).addTo(map);
 
-// ======================================
-// TITULO
-// ======================================
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function() {
+    const div = L.DomUtil.create('div', 'legend');
+    div.innerHTML = `
+      <div class="titulo">Desvío LC</div>
+      <div><i style="background:${COLORES.bajo}"></i> Bajo</div>
+      <div><i style="background:${COLORES.medio}"></i> Medio</div>
+      <div><i style="background:${COLORES.alto}"></i> Alto</div>`;
+    return div;
+  };
+  legend.addTo(map);
+}
 
-const titulo =
-  L.control({ position: 'topright' });
+async function cargarDatos() {
+  setStatus('Descargando mapa…');
+  const geoResp = await fetch(GEOJSON_URL);
+  geojsonData = await geoResp.json();
+  if (geojsonData.type === 'Topology') {
+    await cargarScript('https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js');
+    const obj = Object.keys(geojsonData.objects)[0];
+    geojsonData = topojson.feature(geojsonData, geojsonData.objects[obj]);
+  }
+  setStatus('Descargando datos…');
+  const csvResp = await fetch(CSV_URL);
+  if (!csvResp.ok) throw new Error(`CSV no accesible (${csvResp.status}). Verificá que esté publicado como CSV.`);
+  const csvText = await csvResp.text();
+  const parsed = Papa.parse(csvText, { header: true, dynamicTyping: true, skipEmptyLines: true });
+  csvData = parsed.data.filter(r => r.geo_id != null);
+  setStatus(`${csvData.length.toLocaleString('es-AR')} filas cargadas`);
+}
 
-titulo.onAdd = function () {
+function cargarScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
 
-  const div =
-    L.DomUtil.create(
-      'div',
-      'titleBox'
-    );
+function popularFiltros() {
+  const provs = new Set(), cults = new Set();
+  for (const r of csvData) {
+    if (r.provincia) provs.add(r.provincia);
+    if (r.cultivo) cults.add(r.cultivo);
+  }
+  fillSelect('f-provincia', [...provs].sort(), 'Provincia');
+  fillSelect('f-cultivo', [...cults].sort(), 'Cultivo');
+  actualizarDepartamentos();
+  actualizarCoberturas();
+}
 
-  div.innerHTML =
-    'GIS Agro';
+function fillSelect(id, values, placeholder) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  for (const v of values) {
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    sel.appendChild(opt);
+  }
+}
 
-  return div;
+function actualizarDepartamentos() {
+  const deptos = new Set();
+  for (const r of csvData) {
+    if (filtros.provincia && r.provincia !== filtros.provincia) continue;
+    if (r.departamento) deptos.add(r.departamento);
+  }
+  const sel = document.getElementById('f-departamento');
+  const val = sel.value;
+  fillSelect('f-departamento', [...deptos].sort(), 'Departamento');
+  if ([...deptos].includes(val)) sel.value = val;
+}
 
-};
+function actualizarCoberturas() {
+  const cobs = new Set();
+  for (const r of csvData) {
+    if (filtros.provincia && r.provincia !== filtros.provincia) continue;
+    if (filtros.departamento && r.departamento !== filtros.departamento) continue;
+    if (filtros.cultivo && r.cultivo !== filtros.cultivo) continue;
+    if (r.cobertura) cobs.add(r.cobertura);
+  }
+  const sel = document.getElementById('f-cobertura');
+  const val = sel.value;
+  fillSelect('f-cobertura', [...cobs].sort(), 'Cobertura');
+  if ([...cobs].includes(val)) sel.value = val;
+}
 
-titulo.addTo(map);
+function setupEventListeners() {
+  document.getElementById('f-provincia').addEventListener('change', e => {
+    filtros.provincia = e.target.value;
+    filtros.departamento = '';
+    actualizarDepartamentos();
+    actualizarCoberturas();
+    refrescar();
+  });
+  document.getElementById('f-departamento').addEventListener('change', e => {
+    filtros.departamento = e.target.value;
+    actualizarCoberturas();
+    refrescar();
+  });
+  document.getElementById('f-cultivo').addEventListener('change', e => {
+    filtros.cultivo = e.target.value;
+    actualizarCoberturas();
+    refrescar();
+  });
+  document.getElementById('f-cobertura').addEventListener('change', e => {
+    filtros.cobertura = e.target.value;
+    refrescar();
+  });
+  document.getElementById('f-escenario').addEventListener('change', e => {
+    filtros.escenario = e.target.value;
+    refrescar();
+  });
+}
 
-// ======================================
-// LEYENDA
-// ======================================
+function filtrarFilas() {
+  return csvData.filter(r => {
+    if (filtros.provincia && r.provincia !== filtros.provincia) return false;
+    if (filtros.departamento && r.departamento !== filtros.departamento) return false;
+    if (filtros.cultivo && r.cultivo !== filtros.cultivo) return false;
+    if (filtros.cobertura && r.cobertura !== filtros.cobertura) return false;
+    return true;
+  });
+}
 
-const legend =
-  L.control({ position: 'bottomright' });
+function metricaTPP(r) {
+  if (filtros.escenario === 'auto') return r.lc_mas_cat_pct;
+  const n = parseInt(filtros.escenario);
+  const col = `tpp_cat_${n}_pct`;
+  return r[col] != null ? r[col] : r.lc_mas_cat_pct;
+}
+function metricaComercial(r) {
+  if (filtros.escenario === 'auto') return r.tasa_comercial_pct;
+  const n = parseInt(filtros.escenario);
+  const col = `tasa_calc_${n}_pct`;
+  return r[col] != null ? r[col] : r.tasa_comercial_pct;
+}
 
-legend.onAdd = function () {
-
-  const div =
-    L.DomUtil.create(
-      'div',
-      'legend'
-    );
-
-  div.innerHTML = `
-
-    <b>Desvío LC</b><br><br>
-
-    <i style="background:#1a9850"></i>
-    Bajo<br>
-
-    <i style="background:#fee08b"></i>
-    Medio<br>
-
-    <i style="background:#d73027"></i>
-    Alto
-
-  `;
-
-  return div;
-
-};
-
-legend.addTo(map);
-
-// ======================================
-// CSV
-// ======================================
-
-const csvUrl =
-'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxQFMHwjNrMlzLxa6YylBf3PLQnZc0bgwJM3qT_bzWjBx-0ZaSC_kPgfdpJcqGWQ/pub?output=csv';
-
-let allData = [];
-
-// ======================================
-// CARGAR CSV
-// ======================================
-
-Papa.parse(csvUrl, {
-
-  download: true,
-
-  header: true,
-
-  complete: function(results) {
-
-    results.data.forEach(row => {
-
-      allData.push({
-
-        geo_id:
-          String(
-            row.geo_id
-          ).trim(),
-
-        provincia:
-          row.provincia,
-
-        departamento:
-          row.departamento,
-
-        cultivo:
-          row.cultivo,
-
-        cobertura:
-          row.cobertura,
-
-        n_anios_cat:
-          row.n_anios_cat,
-
-        registros:
-          parseFloat(
-            row.registros
-          ),
-
-        anios_considerados:
-          parseFloat(
-            row.anios_considerados
-          ),
-
-        hectareas:
-          parseFloat(
-            row.hectareas
-          ),
-
-        suma_asegurada:
-          parseFloat(
-            row.suma_asegurada
-          ),
-
-        lc:
-          parseFloat(
-            row.lc_medio_pct
-          ),
-
-        lc_cat:
-          parseFloat(
-            row.lc_mas_cat_pct
-          ),
-
-        tasa:
-          parseFloat(
-            row.tasa_comercial_pct
-          ),
-
-        desvio:
-          parseFloat(
-            row.desvio_lc_pct
-          )
-
+function agregarPorGeoID(filas) {
+  const out = new Map();
+  for (const r of filas) {
+    const gid = r.geo_id;
+    if (gid == null) continue;
+    if (!out.has(gid)) {
+      out.set(gid, {
+        geo_id: gid, provincia: r.provincia, departamento: r.departamento,
+        lc_medio: [], lc_max: [], desvio_lc: [],
+        tpp: [], comercial: [], hectareas: 0, suma_asegurada: 0,
+        registros: [], anios: []
       });
-
-    });
-
-    iniciarGIS();
-
-  }
-
-});
-
-// ======================================
-// FILTRAR
-// ======================================
-
-function filtrarDatos() {
-
-  return allData.filter(d => {
-
-    return (
-
-      (filtros.provincia === '' ||
-
-       d.provincia ===
-       filtros.provincia)
-
-      &&
-
-      (filtros.departamento === '' ||
-
-       d.departamento ===
-       filtros.departamento)
-
-      &&
-
-      (filtros.cultivo === '' ||
-
-       d.cultivo ===
-       filtros.cultivo)
-
-      &&
-
-      (filtros.cobertura === '' ||
-
-       d.cobertura ===
-       filtros.cobertura)
-
-      &&
-
-      (filtros.n_anios_cat === '' ||
-
-       d.n_anios_cat ==
-       filtros.n_anios_cat)
-
-    );
-
-  });
-
-}
-
-// ======================================
-// PROMEDIO
-// ======================================
-
-function promedio(arr){
-
-  const validos =
-    arr.filter(
-      v => !isNaN(v)
-    );
-
-  if(validos.length === 0)
-    return 0;
-
-  return (
-
-    validos.reduce(
-      (a,b)=>a+b,
-      0
-    )
-
-    / validos.length
-
-  );
-
-}
-
-// ======================================
-// AGRUPAR
-// ======================================
-
-function agruparDepartamentos(datos) {
-
-  const grupos = {};
-
-  datos.forEach(d => {
-
-    if(!grupos[d.geo_id]){
-
-      grupos[d.geo_id] = {
-
-        geo_id:
-          d.geo_id,
-
-        provincia:
-          d.provincia,
-
-        departamento:
-          d.departamento,
-
-        hectareas: 0,
-
-        suma: 0,
-
-        lc: [],
-
-        lc_cat: [],
-
-        tasa: [],
-
-        desvio: []
-
-      };
-
     }
-
-    grupos[d.geo_id]
-      .hectareas +=
-      d.hectareas;
-
-    grupos[d.geo_id]
-      .suma +=
-      d.suma_asegurada;
-
-    grupos[d.geo_id]
-      .lc.push(d.lc);
-
-    grupos[d.geo_id]
-      .lc_cat.push(d.lc_cat);
-
-    grupos[d.geo_id]
-      .tasa.push(d.tasa);
-
-    grupos[d.geo_id]
-      .desvio.push(d.desvio);
-
-  });
-
-  Object.values(grupos)
-    .forEach(g => {
-
-    g.lc =
-      promedio(g.lc);
-
-    g.lc_cat =
-      promedio(g.lc_cat);
-
-    g.tasa =
-      promedio(g.tasa);
-
-    g.desvio =
-      promedio(g.desvio);
-
-  });
-
-  return grupos;
-
+    const s = out.get(gid);
+    if (typeof r.lc_medio_pct === 'number') s.lc_medio.push(r.lc_medio_pct);
+    if (typeof r.lc_max_pct === 'number') s.lc_max.push(r.lc_max_pct);
+    if (typeof r.desvio_lc_pct === 'number') s.desvio_lc.push(r.desvio_lc_pct);
+    const tpp = metricaTPP(r); if (typeof tpp === 'number') s.tpp.push(tpp);
+    const com = metricaComercial(r); if (typeof com === 'number') s.comercial.push(com);
+    if (typeof r.hectareas === 'number') s.hectareas += r.hectareas;
+    if (typeof r.suma_asegurada === 'number') s.suma_asegurada += r.suma_asegurada;
+    if (typeof r.registros === 'number') s.registros.push(r.registros);
+    if (typeof r.anios_considerados === 'number') s.anios.push(r.anios_considerados);
+  }
+  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  for (const s of out.values()) {
+    s.lc_medio_avg = avg(s.lc_medio);
+    s.lc_max_avg = avg(s.lc_max);
+    s.desvio_lc_avg = avg(s.desvio_lc);
+    s.tpp_avg = avg(s.tpp);
+    s.comercial_avg = avg(s.comercial);
+    s.registros_avg = avg(s.registros);
+    s.anios_avg = avg(s.anios);
+  }
+  return out;
 }
 
-// ======================================
-// INICIAR GIS
-// ======================================
+function calcularKPIs(filas) {
+  if (!filas.length) return { tecnica: null, cat: null, comercial: null };
+  let sumWLC = 0, sumWTPP = 0, sumWCom = 0, sumW = 0;
+  let sumLC = 0, sumTPP = 0, sumCom = 0, nLC = 0, nTPP = 0, nCom = 0;
+  for (const r of filas) {
+    const w = (typeof r.hectareas === 'number' && r.hectareas > 0) ? r.hectareas : 0;
+    if (typeof r.lc_medio_pct === 'number') {
+      sumLC += r.lc_medio_pct; nLC++;
+      if (w) { sumWLC += r.lc_medio_pct * w; sumW += w; }
+    }
+    const tpp = metricaTPP(r);
+    if (typeof tpp === 'number') { sumTPP += tpp; nTPP++; if (w) sumWTPP += tpp * w; }
+    const com = metricaComercial(r);
+    if (typeof com === 'number') { sumCom += com; nCom++; if (w) sumWCom += com * w; }
+  }
+  if (sumW > 0) return { tecnica: sumWLC/sumW, cat: sumWTPP/sumW, comercial: sumWCom/sumW };
+  return {
+    tecnica: nLC ? sumLC/nLC : null,
+    cat: nTPP ? sumTPP/nTPP : null,
+    comercial: nCom ? sumCom/nCom : null
+  };
+}
 
-function iniciarGIS(){
+function colorDesvio(v) {
+  if (v == null || isNaN(v)) return COLORES.sin_dato;
+  if (v < UMBRALES_DESVIO.bajo) return COLORES.bajo;
+  if (v < UMBRALES_DESVIO.alto) return COLORES.medio;
+  return COLORES.alto;
+}
+const fmtPct = v => (v==null||isNaN(v)) ? '—' : v.toFixed(2) + '%';
+const fmtNum = v => (v==null||isNaN(v)) ? '—' : Math.round(v).toLocaleString('es-AR');
+const fmtMoney = v => (v==null||isNaN(v)) ? '—' : '$' + Math.round(v).toLocaleString('es-AR');
 
-  const datosFiltrados =
-    filtrarDatos();
+function refrescar() {
+  if (!geojsonData) return;
+  const filas = filtrarFilas();
+  const stats = agregarPorGeoID(filas);
+  const kpis = calcularKPIs(filas);
 
-  const datosAgrupados =
-    agruparDepartamentos(
-      datosFiltrados
-    );
+  document.getElementById('kpi-tecnica').textContent = fmtPct(kpis.tecnica);
+  document.getElementById('kpi-cat').textContent = fmtPct(kpis.cat);
+  document.getElementById('kpi-comercial').textContent = fmtPct(kpis.comercial);
 
-  fetch(
+  if (layerDeptos) map.removeLayer(layerDeptos);
+  etiquetas.forEach(e => map.removeLayer(e));
+  etiquetas = [];
 
-    'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json'
+  const mostrarEtiquetas = filtros.provincia !== '' || filtros.departamento !== '';
 
-  )
+  layerDeptos = L.geoJSON(geojsonData, {
+    style: feature => {
+      const gid = feature.properties.gid_dpto || feature.properties.GeoID;
+      const s = stats.get(gid);
+      return {
+        fillColor: s ? colorDesvio(s.desvio_lc_avg) : COLORES.sin_dato,
+        weight: 0.4, color: '#5a5a5a',
+        fillOpacity: s ? 0.78 : 0.20
+      };
+    },
+    onEachFeature: (feature, layer) => {
+      const gid = feature.properties.gid_dpto || feature.properties.GeoID;
+      const s = stats.get(gid);
+      const nomDpto = feature.properties.nam_dpto || feature.properties.departamento || '';
+      const nomProv = feature.properties.nam_prov || feature.properties.provincia || '';
 
-  .then(
-    response => response.json()
-  )
-
-  .then(data => {
-
-    const geojsonLayer =
-      L.geoJSON(data, {
-
-      style: function(feature){
-
-        const id =
-          String(
-            feature.properties.gid_dpto
-          ).trim();
-
-        const info =
-          datosAgrupados[id];
-
-        let desvio =
-          info
-            ? info.desvio
-            : 0;
-
-        let color =
-
-          desvio > 10
-            ? '#d73027'
-
-          :
-
-          desvio > 5
-            ? '#fee08b'
-
-          :
-
-            '#1a9850';
-
-        return {
-
-          color: '#555',
-
-          weight: 1,
-
-          fillColor: color,
-
-          fillOpacity: 0.75
-
-        };
-
-      },
-
-      onEachFeature:
-        function(feature, layer){
-
-        const id =
-          String(
-            feature.properties.gid_dpto
-          ).trim();
-
-        const info =
-          datosAgrupados[id];
-
-        if(info){
-
-          layer.bindPopup(`
-
-            <b>
-              ${info.departamento}
-            </b><br><br>
-
-            Provincia:
-            ${info.provincia}<br>
-
-            LC Medio:
-            ${info.lc.toFixed(1)}%<br>
-
-            LC + CAT:
-            ${info.lc_cat.toFixed(1)}%<br>
-
-            Tasa:
-            ${info.tasa.toFixed(1)}%<br>
-
-            Desvío:
-            ${info.desvio.toFixed(1)}%<br>
-
-            Hectáreas:
-            ${info.hectareas.toLocaleString()}<br>
-
-            Suma Asegurada:
-            ${info.suma.toLocaleString()}
-
-          `);
-
-        }
-
+      if (s) {
+        layer.bindPopup(`
+          <div class="popup-tabla">
+            <h4>${nomDpto}</h4>
+            <div class="sub">${nomProv}</div>
+            <table>
+              <tr><td>Registros (media)</td>      <td>${fmtNum(s.registros_avg)}</td></tr>
+              <tr><td>Años considerados</td>      <td>${s.anios_avg ? s.anios_avg.toFixed(1) : '—'}</td></tr>
+              <tr><td>Hectáreas (total)</td>      <td>${fmtNum(s.hectareas)}</td></tr>
+              <tr><td>Suma asegurada</td>         <td>${fmtMoney(s.suma_asegurada)}</td></tr>
+              <tr><td>LC medio</td>               <td>${fmtPct(s.lc_medio_avg)}</td></tr>
+              <tr><td>LC máximo</td>              <td>${fmtPct(s.lc_max_avg)}</td></tr>
+              <tr><td>Desvío LC</td>              <td>${fmtPct(s.desvio_lc_avg)}</td></tr>
+              <tr class="destacado"><td>T. con CAT</td>   <td>${fmtPct(s.tpp_avg)}</td></tr>
+              <tr class="destacado"><td>T. Comercial</td> <td>${fmtPct(s.comercial_avg)}</td></tr>
+            </table>
+          </div>`);
+      } else {
+        layer.bindPopup(`<div class="popup-tabla"><h4>${nomDpto}</h4><div class="sub">${nomProv}</div><div style="color:#888;margin-top:6px">Sin datos para el filtro actual</div></div>`);
       }
 
-    }).addTo(map);
+      layer.on('mouseover', e => {
+        e.target.setStyle({ weight: 1.8, color: '#1a1a1a' });
+        e.target.bringToFront();
+      });
+      layer.on('mouseout', e => layerDeptos.resetStyle(e.target));
 
-    map.fitBounds(
-      geojsonLayer.getBounds()
-    );
+      if (s && mostrarEtiquetas && s.lc_medio_avg != null) {
+        try {
+          const center = layer.getBounds().getCenter();
+          const label = L.tooltip({
+            permanent: true, direction: 'center',
+            className: 'lc-label', opacity: 1
+          }).setLatLng(center).setContent(s.lc_medio_avg.toFixed(1) + '%');
+          label.addTo(map);
+          etiquetas.push(label);
+        } catch(e) {}
+      }
+    }
+  }).addTo(map);
 
-  });
-
+  if (filtros.departamento) {
+    const feat = geojsonData.features.find(f => {
+      const d = f.properties.nam_dpto || f.properties.departamento;
+      const p = f.properties.nam_prov || f.properties.provincia;
+      return d === filtros.departamento && (!filtros.provincia || p === filtros.provincia);
+    });
+    if (feat) {
+      const tmp = L.geoJSON(feat);
+      map.fitBounds(tmp.getBounds(), { padding: [40,40], maxZoom: 9 });
+    }
+  } else if (filtros.provincia) {
+    const feats = geojsonData.features.filter(f => {
+      const p = f.properties.nam_prov || f.properties.provincia;
+      return p === filtros.provincia;
+    });
+    if (feats.length) {
+      const tmp = L.geoJSON({ type:'FeatureCollection', features: feats });
+      map.fitBounds(tmp.getBounds(), { padding:[20,20] });
+    }
+  } else {
+    map.setView([-35, -64], 5);
+  }
 }
 
-</script>
+function setStatus(t, hide = false) {
+  const el = document.getElementById('status');
+  el.textContent = t;
+  if (hide) el.classList.add('hidden');
+  else el.classList.remove('hidden');
+}
 
+init();
+</script>
 </body>
 </html>

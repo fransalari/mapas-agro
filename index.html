@@ -3,15 +3,23 @@
 
 <head>
 
-<meta charset="utf-8" />
+<meta charset="utf-8"/>
 
 <title>GIS Agro</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+/>
 
 <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  rel="stylesheet"
 />
 
 <style>
@@ -19,26 +27,48 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
   font-family: Arial;
 }
 
 #container {
   display: flex;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
 }
 
 #map {
-  flex: 3;
+  width: 75%;
+  height: 100%;
 }
 
 #sidebar {
-  flex: 1;
+  width: 25%;
+  height: 100%;
   overflow-y: auto;
   background: #f5f5f5;
   border-left: 1px solid #ccc;
+  padding: 12px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 10px;
   padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.kpi-title {
+  font-size: 12px;
+  color: #666;
+}
+
+.kpi-value {
+  font-size: 20px;
+  font-weight: bold;
 }
 
 table {
@@ -56,6 +86,12 @@ th {
   background: #eee;
 }
 
+.legend {
+  background: white;
+  padding: 10px;
+  line-height: 18px;
+}
+
 </style>
 
 </head>
@@ -68,7 +104,34 @@ th {
 
 <div id="sidebar">
 
-<h2>Departamentos</h2>
+<h4>GIS Agro</h4>
+
+<div class="kpi-card">
+<div class="kpi-title">LC Medio</div>
+<div class="kpi-value" id="kpiLC">-</div>
+</div>
+
+<div class="kpi-card">
+<div class="kpi-title">LC + CAT</div>
+<div class="kpi-value" id="kpiLCCAT">-</div>
+</div>
+
+<div class="kpi-card">
+<div class="kpi-title">Tasa Comercial</div>
+<div class="kpi-value" id="kpiTasa">-</div>
+</div>
+
+<div class="kpi-card">
+<div class="kpi-title">Hectáreas</div>
+<div class="kpi-value" id="kpiHectareas">-</div>
+</div>
+
+<div class="kpi-card">
+<div class="kpi-title">Suma Asegurada</div>
+<div class="kpi-value" id="kpiSuma">-</div>
+</div>
+
+<hr>
 
 <table id="dataTable">
 
@@ -94,7 +157,40 @@ th {
 
 <script>
 
-var map = L.map('map').setView([-35, -63], 5);
+// =========================
+// URL FILTERS
+// =========================
+
+const params =
+  new URLSearchParams(window.location.search);
+
+const filtros = {
+
+  provincia:
+    params.get('provincia') || '',
+
+  departamento:
+    params.get('departamento') || '',
+
+  cultivo:
+    params.get('cultivo') || '',
+
+  cobertura:
+    params.get('cobertura') || '',
+
+  n_anios_cat:
+    params.get('n_anios_cat') || 'N (dinámico)'
+
+};
+
+console.log(filtros);
+
+// =========================
+// MAPA
+// =========================
+
+var map = L.map('map')
+  .setView([-35, -63], 5);
 
 L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -103,9 +199,14 @@ L.tileLayer(
   }
 ).addTo(map);
 
-// CSV GOOGLE SHEETS
+// =========================
+// CSV
+// =========================
+
 const csvUrl =
 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxQFMHwjNrMlzLxa6YylBf3PLQnZc0bgwJM3qT_bzWjBx-0ZaSC_kPgfdpJcqGWQ/pub?output=csv';
+
+let allData = [];
 
 Papa.parse(csvUrl, {
 
@@ -114,115 +215,367 @@ Papa.parse(csvUrl, {
 
   complete: function(results) {
 
-    let datos = {};
-
     results.data.forEach(row => {
 
-      const geo_id =
-        String(row.geo_id).trim();
+      allData.push({
 
-      const lc =
-        parseFloat(
-          String(row.lc_medio_pct)
-            .replace('%', '')
-            .replace(',', '.')
-        );
-
-      const desvio =
-        parseFloat(
-          String(row.desvio_lc_pct)
-            .replace('%', '')
-            .replace(',', '.')
-        );
-
-      datos[geo_id] = {
-
-        departamento:
-          row.departamento,
+        geo_id:
+          String(row.geo_id).trim(),
 
         provincia:
           row.provincia,
 
-        lc: lc,
+        departamento:
+          row.departamento,
 
-        desvio: desvio
+        cultivo:
+          row.cultivo,
 
-      };
+        cobertura:
+          row.cobertura,
 
-    });
+        n_anios_cat:
+          row.n_anios_cat,
 
-    // GEOJSON
-    fetch(
-      'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json'
-    )
-    .then(response => response.json())
-    .then(data => {
+        registros:
+          parseFloat(row.registros),
 
-      var geojsonLayer = L.geoJSON(data, {
+        anios_considerados:
+          parseFloat(row.anios_considerados),
 
-        style: function(feature) {
+        hectareas:
+          parseFloat(row.hectareas),
 
-          const id =
-            String(feature.properties.gid_dpto).trim();
+        suma_asegurada:
+          parseFloat(row.suma_asegurada),
 
-          const info =
-            datos[id];
+        lc:
+          parseFloat(row.lc_medio_pct),
 
-          let desvio =
-            info ? info.desvio : 0;
+        lc_cat:
+          parseFloat(row.lc_mas_cat_pct),
 
-          let color =
-            desvio > 10 ? '#d73027' :
-            desvio > 5 ? '#fee08b' :
-            '#1a9850';
+        tasa:
+          parseFloat(row.tasa_comercial_pct),
 
-          return {
+        desvio:
+          parseFloat(row.desvio_lc_pct)
 
-            color: '#555',
-            weight: 1,
-
-            fillColor: color,
-
-            fillOpacity: 0.75
-
-          };
-
-        },
-
-        onEachFeature: function(feature, layer) {
-
-          const id =
-            String(feature.properties.gid_dpto).trim();
-
-          const info =
-            datos[id];
-
-          if(info){
-
-            layer.bindPopup(`
-              <b>${info.departamento}</b><br>
-              Provincia: ${info.provincia}<br>
-              Loss Cost: ${info.lc.toFixed(1)}%<br>
-              Desvío: ${info.desvio.toFixed(1)}%
-            `);
-
-          }
-
-        }
-
-      }).addTo(map);
-
-      map.fitBounds(
-        geojsonLayer.getBounds()
-      );
-
-      actualizarTabla(datos);
+      });
 
     });
+
+    iniciarGIS();
 
   }
 
 });
+
+// =========================
+// FILTRAR
+// =========================
+
+function filtrarDatos() {
+
+  return allData.filter(d => {
+
+    return (
+
+      (filtros.provincia === '' ||
+       d.provincia === filtros.provincia)
+
+      &&
+
+      (filtros.departamento === '' ||
+       d.departamento === filtros.departamento)
+
+      &&
+
+      (filtros.cultivo === '' ||
+       d.cultivo === filtros.cultivo)
+
+      &&
+
+      (filtros.cobertura === '' ||
+       d.cobertura === filtros.cobertura)
+
+      &&
+
+      (filtros.n_anios_cat === '' ||
+       d.n_anios_cat == filtros.n_anios_cat)
+
+    );
+
+  });
+
+}
+
+// =========================
+// PROMEDIO
+// =========================
+
+function promedio(arr){
+
+  const validos =
+    arr.filter(v => !isNaN(v));
+
+  if(validos.length === 0)
+    return 0;
+
+  return (
+    validos.reduce((a,b)=>a+b,0)
+    / validos.length
+  );
+
+}
+
+// =========================
+// AGRUPAR
+// =========================
+
+function agruparDepartamentos(datos) {
+
+  const grupos = {};
+
+  datos.forEach(d => {
+
+    if(!grupos[d.geo_id]){
+
+      grupos[d.geo_id] = {
+
+        geo_id: d.geo_id,
+
+        provincia: d.provincia,
+
+        departamento: d.departamento,
+
+        registros: [],
+
+        anios: [],
+
+        hectareas: 0,
+
+        suma: 0,
+
+        lc: [],
+
+        lc_cat: [],
+
+        tasa: [],
+
+        desvio: []
+
+      };
+
+    }
+
+    grupos[d.geo_id].registros.push(d.registros);
+
+    grupos[d.geo_id].anios.push(d.anios_considerados);
+
+    grupos[d.geo_id].hectareas += d.hectareas;
+
+    grupos[d.geo_id].suma += d.suma_asegurada;
+
+    grupos[d.geo_id].lc.push(d.lc);
+
+    grupos[d.geo_id].lc_cat.push(d.lc_cat);
+
+    grupos[d.geo_id].tasa.push(d.tasa);
+
+    grupos[d.geo_id].desvio.push(d.desvio);
+
+  });
+
+  Object.values(grupos).forEach(g => {
+
+    g.registros = promedio(g.registros);
+
+    g.anios = promedio(g.anios);
+
+    g.lc = promedio(g.lc);
+
+    g.lc_cat = promedio(g.lc_cat);
+
+    g.tasa = promedio(g.tasa);
+
+    g.desvio = promedio(g.desvio);
+
+  });
+
+  return grupos;
+
+}
+
+// =========================
+// INICIAR GIS
+// =========================
+
+function iniciarGIS(){
+
+  const datosFiltrados =
+    filtrarDatos();
+
+  const datosAgrupados =
+    agruparDepartamentos(
+      datosFiltrados
+    );
+
+  actualizarKPIs(
+    datosFiltrados
+  );
+
+  actualizarTabla(
+    datosAgrupados
+  );
+
+  fetch(
+    'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json'
+  )
+  .then(response => response.json())
+  .then(data => {
+
+    const geojsonLayer =
+      L.geoJSON(data, {
+
+      style: function(feature){
+
+        const id =
+          String(
+            feature.properties.gid_dpto
+          ).trim();
+
+        const info =
+          datosAgrupados[id];
+
+        let desvio =
+          info ? info.desvio : 0;
+
+        let color =
+          desvio > 10 ? '#d73027' :
+          desvio > 5 ? '#fee08b' :
+          '#1a9850';
+
+        return {
+
+          color: '#555',
+
+          weight: 1,
+
+          fillColor: color,
+
+          fillOpacity: 0.75
+
+        };
+
+      },
+
+      onEachFeature:
+        function(feature, layer){
+
+        const id =
+          String(
+            feature.properties.gid_dpto
+          ).trim();
+
+        const info =
+          datosAgrupados[id];
+
+        if(info){
+
+          layer.bindPopup(`
+
+            <b>${info.departamento}</b><br>
+
+            Provincia:
+            ${info.provincia}<br>
+
+            LC Medio:
+            ${info.lc.toFixed(1)}%<br>
+
+            LC + CAT:
+            ${info.lc_cat.toFixed(1)}%<br>
+
+            Tasa:
+            ${info.tasa.toFixed(1)}%<br>
+
+            Desvío:
+            ${info.desvio.toFixed(1)}%<br>
+
+            Hectáreas:
+            ${info.hectareas.toLocaleString()}<br>
+
+            Suma:
+            ${info.suma.toLocaleString()}
+
+          `);
+
+        }
+
+      }
+
+    }).addTo(map);
+
+    map.fitBounds(
+      geojsonLayer.getBounds()
+    );
+
+  });
+
+}
+
+// =========================
+// KPI
+// =========================
+
+function actualizarKPIs(datos){
+
+  document.getElementById(
+    'kpiLC'
+  ).innerHTML =
+    promedio(
+      datos.map(d=>d.lc)
+    ).toFixed(1) + '%';
+
+  document.getElementById(
+    'kpiLCCAT'
+  ).innerHTML =
+    promedio(
+      datos.map(d=>d.lc_cat)
+    ).toFixed(1) + '%';
+
+  document.getElementById(
+    'kpiTasa'
+  ).innerHTML =
+    promedio(
+      datos.map(d=>d.tasa)
+    ).toFixed(1) + '%';
+
+  document.getElementById(
+    'kpiHectareas'
+  ).innerHTML =
+    datos
+      .reduce(
+        (a,b)=>a+b.hectareas,
+        0
+      )
+      .toLocaleString();
+
+  document.getElementById(
+    'kpiSuma'
+  ).innerHTML =
+    datos
+      .reduce(
+        (a,b)=>a+b.suma_asegurada,
+        0
+      )
+      .toLocaleString();
+
+}
+
+// =========================
+// TABLA
+// =========================
 
 function actualizarTabla(datos){
 
@@ -233,15 +586,24 @@ function actualizarTabla(datos){
 
   tbody.innerHTML = '';
 
-  Object.values(datos).forEach(d => {
+  Object.values(datos)
+    .forEach(d => {
 
     const row =
       document.createElement('tr');
 
     row.innerHTML = `
+
       <td>${d.departamento}</td>
-      <td>${d.lc.toFixed(1)}%</td>
-      <td>${d.desvio.toFixed(1)}%</td>
+
+      <td>
+        ${d.lc.toFixed(1)}%
+      </td>
+
+      <td>
+        ${d.desvio.toFixed(1)}%
+      </td>
+
     `;
 
     tbody.appendChild(row);

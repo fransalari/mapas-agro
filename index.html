@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="utf-8" />
 
-<title>Mapa Agro</title>
+<title>GIS Agro</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -18,13 +19,41 @@
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
   height: 100%;
+  font-family: Arial;
+}
+
+#container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
 }
 
 #map {
-  width: 100vw;
-  height: 100vh;
+  flex: 3;
+}
+
+#sidebar {
+  flex: 1;
+  overflow-y: auto;
+  background: #f5f5f5;
+  border-left: 1px solid #ccc;
+  padding: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+
+th {
+  background: #eee;
 }
 
 </style>
@@ -33,13 +62,39 @@ html, body {
 
 <body>
 
+<div id="container">
+
 <div id="map"></div>
+
+<div id="sidebar">
+
+<h2>Departamentos</h2>
+
+<table id="dataTable">
+
+<thead>
+<tr>
+<th>Departamento</th>
+<th>LC</th>
+<th>Desvío</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+</div>
+
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
 <script>
 
-var map = L.map('map').setView([-31.5, -63], 6);
+var map = L.map('map').setView([-35, -63], 5);
 
 L.tileLayer(
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -48,40 +103,152 @@ L.tileLayer(
   }
 ).addTo(map);
 
-fetch('https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json')
-  .then(response => response.json())
-  .then(data => {
+// CSV GOOGLE SHEETS
+const csvUrl =
+'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxQFMHwjNrMlzLxa6YylBf3PLQnZc0bgwJM3qT_bzWjBx-0ZaSC_kPgfdpJcqGWQ/pub?output=csv';
 
-    var geojsonLayer = L.geoJSON(data, {
+Papa.parse(csvUrl, {
 
-      style: function(feature) {
+  download: true,
+  header: true,
 
-        let tasa = Math.random();
+  complete: function(results) {
 
-        return {
-          color: '#333',
-          weight: 1,
-          fillColor:
-            tasa > 0.6 ? 'red' :
-            tasa > 0.3 ? 'yellow' :
-            'green',
-          fillOpacity: 0.7
-        };
-      },
+    let datos = {};
 
-      onEachFeature: function(feature, layer) {
+    results.data.forEach(row => {
 
-        layer.bindPopup(
-          'ID: ' + (feature.properties.id || 'Sin ID')
+      const geo_id =
+        String(row.geo_id).trim();
+
+      const lc =
+        parseFloat(
+          String(row.lc_medio_pct)
+            .replace('%', '')
+            .replace(',', '.')
         );
 
-      }
+      const desvio =
+        parseFloat(
+          String(row.desvio_lc_pct)
+            .replace('%', '')
+            .replace(',', '.')
+        );
 
-    }).addTo(map);
+      datos[geo_id] = {
 
-    map.fitBounds(geojsonLayer.getBounds());
+        departamento:
+          row.departamento,
+
+        provincia:
+          row.provincia,
+
+        lc: lc,
+
+        desvio: desvio
+
+      };
+
+    });
+
+    // GEOJSON
+    fetch(
+      'https://raw.githubusercontent.com/fransalari/mapas-agro/main/admin_boundaries_vf.json'
+    )
+    .then(response => response.json())
+    .then(data => {
+
+      var geojsonLayer = L.geoJSON(data, {
+
+        style: function(feature) {
+
+          const id =
+            String(feature.properties.gid_dpto).trim();
+
+          const info =
+            datos[id];
+
+          let desvio =
+            info ? info.desvio : 0;
+
+          let color =
+            desvio > 10 ? '#d73027' :
+            desvio > 5 ? '#fee08b' :
+            '#1a9850';
+
+          return {
+
+            color: '#555',
+            weight: 1,
+
+            fillColor: color,
+
+            fillOpacity: 0.75
+
+          };
+
+        },
+
+        onEachFeature: function(feature, layer) {
+
+          const id =
+            String(feature.properties.gid_dpto).trim();
+
+          const info =
+            datos[id];
+
+          if(info){
+
+            layer.bindPopup(`
+              <b>${info.departamento}</b><br>
+              Provincia: ${info.provincia}<br>
+              Loss Cost: ${info.lc.toFixed(1)}%<br>
+              Desvío: ${info.desvio.toFixed(1)}%
+            `);
+
+          }
+
+        }
+
+      }).addTo(map);
+
+      map.fitBounds(
+        geojsonLayer.getBounds()
+      );
+
+      actualizarTabla(datos);
+
+    });
+
+  }
+
+});
+
+function actualizarTabla(datos){
+
+  const tbody =
+    document.querySelector(
+      '#dataTable tbody'
+    );
+
+  tbody.innerHTML = '';
+
+  Object.values(datos).forEach(d => {
+
+    const row =
+      document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${d.departamento}</td>
+      <td>${d.lc.toFixed(1)}%</td>
+      <td>${d.desvio.toFixed(1)}%</td>
+    `;
+
+    tbody.appendChild(row);
 
   });
+
+}
 
 </script>
 

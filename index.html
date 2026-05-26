@@ -76,17 +76,30 @@
     box-shadow: 0 1px 4px rgba(0,0,0,.15);
     z-index: 400;
   }
-  .kpis { display: flex; flex-direction: column; gap: 14px; }
+  .kpis { display: flex; flex-direction: column; gap: 12px; }
   .kpi {
-    background: white; padding: 18px 16px;
+    background: white; padding: 16px;
     border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
   }
-  .kpi-label { font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+  .kpi-destacado {
+    background: linear-gradient(135deg, #1F4E78 0%, #2E75B6 100%);
+    color: white;
+  }
+  .kpi-destacado .kpi-label,
+  .kpi-destacado .kpi-extra { color: rgba(255,255,255,.85); }
+  .kpi-destacado .kpi-valor { color: white; }
+  .kpi.warning {
+    background: #FFF8E1;
+    border-left: 4px solid #FFA000;
+  }
+  .kpi.warning .kpi-valor { color: #E65100; }
+  .kpi.warning .kpi-extra { color: #BF6900; font-weight: 600; }
+  .kpi-label { font-size: 12px; color: #666; margin-bottom: 6px; font-weight: 500; }
   .kpi-valor {
-    font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1;
+    font-size: 24px; font-weight: 700; color: #1a1a1a; line-height: 1;
     letter-spacing: -0.5px;
   }
-  .kpi-extra { font-size: 11px; color: #999; margin-top: 4px; }
+  .kpi-extra { font-size: 10px; color: #999; margin-top: 4px; }
 
   .legend {
     background: white; padding: 10px 12px;
@@ -128,6 +141,7 @@
   .popup-tabla td:first-child { color: #666; }
   .popup-tabla td:last-child { font-weight: 600; text-align: right; color: #1a1a1a; }
   .popup-tabla tr.destacado td { color: #1F4E78; font-weight: 700; padding-top: 6px; border-top: 1px solid #e8e8ec; }
+  .popup-tabla tr.destacado-mercado td { color: #C8102E; font-weight: 700; }
 
   .disclaimer {
     padding: 0 32px 20px 32px;
@@ -189,20 +203,25 @@
       <div class="kpi-extra">Pond. por hectáreas</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">LC ajustado CAT</div>
-      <div class="kpi-valor" id="kpi-cat">—</div>
-      <div class="kpi-extra">Incluye margen catastrófico</div>
-    </div>
-    <div class="kpi">
       <div class="kpi-label">Tasa Teórica (1-40%)</div>
       <div class="kpi-valor" id="kpi-ref">—</div>
-      <div class="kpi-extra">Indicador integral histórico</div>
+      <div class="kpi-extra">Cobertura específica</div>
+    </div>
+    <div class="kpi kpi-destacado">
+      <div class="kpi-label">Tasa Mercado Esperada</div>
+      <div class="kpi-valor" id="kpi-mercado">—</div>
+      <div class="kpi-extra">Promedio real del depto</div>
+    </div>
+    <div class="kpi" id="kpi-rep-box">
+      <div class="kpi-label">Representatividad</div>
+      <div class="kpi-valor" id="kpi-rep">—</div>
+      <div class="kpi-extra" id="kpi-rep-extra">% del volumen del depto</div>
     </div>
   </div>
 </div>
 
 <div class="disclaimer">
-  <strong>Aclaración:</strong> Los valores presentados son indicadores estadísticos elaborados sobre información histórica de campañas previas, agregada por departamento, cultivo y tipo de cobertura, con promedios ponderados por hectáreas. Constituyen material analítico de referencia y no representan recomendaciones tarifarias ni precios de mercado. Cada operador debe realizar su propio análisis técnico y comercial.
+  <strong>Aclaración:</strong> Los valores son indicadores estadísticos sobre información histórica de campañas previas, agregada por departamento, cultivo y tipo de cobertura, con promedios ponderados por hectáreas. La <strong>Tasa Teórica</strong> corresponde a la cobertura específica filtrada; la <strong>Tasa Mercado Esperada</strong> promedia todas las coberturas que se comercializan en el depto+cultivo (mejor lectura territorial). <strong>Representatividad</strong> indica qué porcentaje del volumen del depto+cultivo representa la cobertura seleccionada — cuando es menor al 30%, los valores específicos pueden subestimar el riesgo real por sesgo de oferta del mercado. Material analítico de referencia; no constituye recomendación tarifaria.
 </div>
 
 <div id="status">Cargando datos…</div>
@@ -319,9 +338,11 @@ async function cargarDatos() {
 
   const camposNumericos = [
     'geo_id', 'registros', 'anios_considerados', 'hectareas', 'suma_asegurada',
+    'hectareas_total_dpto_cultivo', 'representatividad_pct',
     'lc_medio_pct', 'lc_max_pct', 'desvio_lc_pct',
+    'lc_mercado_esperado_pct',
     'adic_cat_historico_pct', 'adic_cat_prorrateado_pct',
-    'lc_mas_cat_pct', 'tasa_comercial_pct',
+    'lc_mas_cat_pct', 'tasa_comercial_pct', 'tasa_mercado_esperada_pct',
     'n_divisor'
   ];
   csvData = parsed.data
@@ -526,25 +547,27 @@ function agregarPorGeoID(filas) {
     if (!out.has(gid)) {
       out.set(gid, {
         geo_id: gid, provincia: r.provincia, departamento: r.departamento,
-        // Para ponderar: arrays paralelos de valor y peso (hectáreas)
         lc_medio_vals: [], lc_medio_pesos: [],
         lc_mas_cat_vals: [], lc_mas_cat_pesos: [],
         referencia_vals: [], referencia_pesos: [],
-        lc_max: -Infinity,  // máximo absoluto
-        desvio_vals: [], desvio_pesos: [],  // ponderado
+        mercado_vals: [], mercado_pesos: [],
+        lc_max: -Infinity,
+        desvio_vals: [], desvio_pesos: [],
         adic_cat_p_vals: [], adic_cat_p_pesos: [],
         hectareas: 0,
-        // Subtotales:
+        hectareas_total_dpto: 0,
+        // Set para no doble-contar el total cuando hay varios cultivos/escenarios
+        dptos_cultivos_vistos: new Set(),
         cant_casos: 0,
         anios_set: new Set(),
         registros_total: 0,
-        anios_sumweighted: 0, anios_pesos_total: 0  // para media ponderada de años
+        anios_sumweighted: 0, anios_pesos_total: 0
       });
     }
     const s = out.get(gid);
     const w = (r.hectareas != null && r.hectareas > 0) ? r.hectareas : 0;
     s.hectareas += (r.hectareas || 0);
-    s.cant_casos += 1;  // Cada FILA es un caso (cobertura/cultivo)
+    s.cant_casos += 1;
     if (r.registros != null) s.registros_total += r.registros;
     if (r.anios_considerados != null) {
       s.anios_set.add(r.anios_considerados);
@@ -553,6 +576,13 @@ function agregarPorGeoID(filas) {
         s.anios_pesos_total += w;
       }
     }
+    // Total dpto+cultivo (denominador): contar una vez por (cultivo, escenario)
+    const keyCultivo = `${r.cultivo}||${r.n_anios_cat_str}`;
+    if (!s.dptos_cultivos_vistos.has(keyCultivo) && r.hectareas_total_dpto_cultivo != null) {
+      s.hectareas_total_dpto += r.hectareas_total_dpto_cultivo;
+      s.dptos_cultivos_vistos.add(keyCultivo);
+    }
+
     if (r.lc_medio_pct != null) {
       s.lc_medio_vals.push(r.lc_medio_pct);
       s.lc_medio_pesos.push(w);
@@ -576,9 +606,12 @@ function agregarPorGeoID(filas) {
       s.referencia_vals.push(r.tasa_comercial_pct);
       s.referencia_pesos.push(w);
     }
+    if (r.tasa_mercado_esperada_pct != null) {
+      s.mercado_vals.push(r.tasa_mercado_esperada_pct);
+      s.mercado_pesos.push(w);
+    }
   }
 
-  // Función de promedio ponderado (fallback a simple si no hay pesos)
   function wavg(vals, pesos) {
     if (!vals.length) return null;
     let sumW = 0, sumWV = 0, sumV = 0;
@@ -600,39 +633,55 @@ function agregarPorGeoID(filas) {
     s.adic_cat_p_avg = wavg(s.adic_cat_p_vals, s.adic_cat_p_pesos);
     s.lc_mas_cat_avg = wavg(s.lc_mas_cat_vals, s.lc_mas_cat_pesos);
     s.referencia_avg = wavg(s.referencia_vals, s.referencia_pesos);
-    // Años considerados: promedio ponderado por hectáreas
+    s.mercado_avg = wavg(s.mercado_vals, s.mercado_pesos);
     s.anios_avg = (s.anios_pesos_total > 0)
       ? s.anios_sumweighted / s.anios_pesos_total
       : (s.anios_set.size > 0 ? [...s.anios_set].reduce((a,b)=>a+b,0)/s.anios_set.size : null);
+    // % representatividad
+    s.representatividad = (s.hectareas_total_dpto > 0)
+      ? (s.hectareas / s.hectareas_total_dpto) * 100
+      : null;
   }
   return out;
 }
 
 function calcularKPIs(filas) {
-  if (!filas.length) return { lc: null, cat: null, ref: null };
-  let sumWLC = 0, sumWCAT = 0, sumWRef = 0, sumW = 0;
-  let sumLC = 0, sumCAT = 0, sumRef = 0, nLC = 0, nCAT = 0, nRef = 0;
+  if (!filas.length) return { lc: null, cat: null, ref: null, mercado: null, rep: null };
+  let sumWLC = 0, sumWCAT = 0, sumWRef = 0, sumWMercado = 0, sumW = 0;
+  let sumHaCobertura = 0, sumHaTotalDpto = 0;
+  // Para evitar contar varias veces el "total dpto" cuando hay varias filas
+  // del mismo depto+cultivo (que tienen el mismo hectareas_total_dpto_cultivo),
+  // usamos un set de claves únicas.
+  const dptosCultivosVistos = new Set();
+
   for (const r of filas) {
     const w = (r.hectareas != null && r.hectareas > 0) ? r.hectareas : 0;
-    if (r.lc_medio_pct != null) {
-      sumLC += r.lc_medio_pct; nLC++;
-      if (w) { sumWLC += r.lc_medio_pct * w; sumW += w; }
+    if (r.lc_medio_pct != null && w) {
+      sumWLC += r.lc_medio_pct * w;
     }
-    if (r.lc_mas_cat_pct != null) {
-      sumCAT += r.lc_mas_cat_pct; nCAT++;
-      if (w) sumWCAT += r.lc_mas_cat_pct * w;
-    }
-    if (r.tasa_comercial_pct != null) {
-      sumRef += r.tasa_comercial_pct; nRef++;
-      if (w) sumWRef += r.tasa_comercial_pct * w;
+    if (r.lc_mas_cat_pct != null && w) sumWCAT += r.lc_mas_cat_pct * w;
+    if (r.tasa_comercial_pct != null && w) sumWRef += r.tasa_comercial_pct * w;
+    if (r.tasa_mercado_esperada_pct != null && w) sumWMercado += r.tasa_mercado_esperada_pct * w;
+    if (w) sumW += w;
+
+    // Hectáreas totales (numerador): solo lo que coincide con el filtro actual de cobertura
+    sumHaCobertura += (r.hectareas || 0);
+
+    // Hectáreas totales del depto+cultivo (denominador): tomar solo una vez por combinación única
+    const key = `${r.provincia}||${r.departamento}||${r.cultivo}||${r.n_anios_cat_str}`;
+    if (!dptosCultivosVistos.has(key) && r.hectareas_total_dpto_cultivo != null) {
+      sumHaTotalDpto += r.hectareas_total_dpto_cultivo;
+      dptosCultivosVistos.add(key);
     }
   }
-  if (sumW > 0) return { lc: sumWLC/sumW, cat: sumWCAT/sumW, ref: sumWRef/sumW };
-  return {
-    lc: nLC ? sumLC/nLC : null,
-    cat: nCAT ? sumCAT/nCAT : null,
-    ref: nRef ? sumRef/nRef : null
-  };
+
+  const lc      = sumW > 0 ? sumWLC / sumW : null;
+  const cat     = sumW > 0 ? sumWCAT / sumW : null;
+  const ref     = sumW > 0 ? sumWRef / sumW : null;
+  const mercado = sumW > 0 ? sumWMercado / sumW : null;
+  const rep     = sumHaTotalDpto > 0 ? (sumHaCobertura / sumHaTotalDpto) * 100 : null;
+
+  return { lc, cat, ref, mercado, rep };
 }
 
 function interpColor(t) {
@@ -683,8 +732,27 @@ function refrescar() {
   const kpis = calcularKPIs(filas);
 
   document.getElementById('kpi-lc').textContent = fmtPct(kpis.lc);
-  document.getElementById('kpi-cat').textContent = fmtPct(kpis.cat);
   document.getElementById('kpi-ref').textContent = fmtPct(kpis.ref);
+  document.getElementById('kpi-mercado').textContent = fmtPct(kpis.mercado);
+  document.getElementById('kpi-rep').textContent = (kpis.rep == null) ? '—' : kpis.rep.toFixed(1) + '%';
+
+  // Warning visual cuando representatividad < 30% Y hay filtro de cobertura activo
+  const repBox = document.getElementById('kpi-rep-box');
+  const repExtra = document.getElementById('kpi-rep-extra');
+  const hayFiltroCobertura = !!filtros.cobertura;
+  if (hayFiltroCobertura && kpis.rep != null && kpis.rep < 30) {
+    repBox.classList.add('warning');
+    repExtra.textContent = '⚠ Muestra poco representativa';
+  } else if (hayFiltroCobertura && kpis.rep != null && kpis.rep >= 30 && kpis.rep < 60) {
+    repBox.classList.remove('warning');
+    repExtra.textContent = 'Representativa';
+  } else if (hayFiltroCobertura && kpis.rep != null && kpis.rep >= 60) {
+    repBox.classList.remove('warning');
+    repExtra.textContent = '✓ Cobertura dominante';
+  } else {
+    repBox.classList.remove('warning');
+    repExtra.textContent = '% del volumen del depto';
+  }
 
   calcularRangoDesvio(stats);
 
@@ -707,20 +775,29 @@ function refrescar() {
       const nomProv = feature.properties.nam_prov || feature.properties.provincia || '';
 
       if (s) {
+        // Badge de advertencia si representatividad baja Y hay filtro de cobertura
+        let warningHtml = '';
+        if (filtros.cobertura && s.representatividad != null && s.representatividad < 30) {
+          warningHtml = `<div style="background:#FFF8E1;border-left:3px solid #FFA000;padding:6px 8px;margin:6px 0;border-radius:3px;font-size:11px;color:#BF6900;">⚠ Esta cobertura representa solo <strong>${s.representatividad.toFixed(1)}%</strong> del volumen de este depto. Mirar la <strong>Tasa Mercado Esperada</strong> como referencia real.</div>`;
+        }
         layer.bindPopup(`
           <div class="popup-tabla">
             <h4>${nomDpto}</h4>
             <div class="sub">${nomProv}</div>
+            ${warningHtml}
             <table>
-              <tr><td>Cant. de Opciones</td>           <td>${fmtNum(s.cant_casos)}</td></tr>
+              <tr><td>Cant. de Casos</td>           <td>${fmtNum(s.cant_casos)}</td></tr>
               <tr><td>Años considerados con casos</td><td>${s.anios_avg ? s.anios_avg.toFixed(1) : '—'}</td></tr>
-              <tr><td>Hectáreas (total)</td>        <td>${fmtNum(s.hectareas)}</td></tr>
+              <tr><td>Hectáreas (esta cob.)</td>    <td>${fmtNum(s.hectareas)}</td></tr>
+              <tr><td>Hectáreas total depto</td>    <td>${fmtNum(s.hectareas_total_dpto)}</td></tr>
+              <tr><td>Representatividad</td>        <td>${s.representatividad != null ? s.representatividad.toFixed(1)+'%' : '—'}</td></tr>
               <tr><td>LC Histórico Pond. Ha.</td>   <td>${fmtPct(s.lc_medio_avg)}</td></tr>
               <tr><td>LC Máx. Peor Año</td>         <td>${fmtPct(s.lc_max_avg)}</td></tr>
               <tr><td>Variabilidad LC</td>          <td>${fmtPct(s.desvio_lc_avg)}</td></tr>
               <tr><td>Adic CAT prorrateado</td>     <td>${fmtPct(s.adic_cat_p_avg)}</td></tr>
               <tr class="destacado"><td>LC ajustado CAT</td>      <td>${fmtPct(s.lc_mas_cat_avg)}</td></tr>
               <tr class="destacado"><td>Tasa Teórica (1-40%)</td> <td>${fmtPct(s.referencia_avg)}</td></tr>
+              <tr class="destacado-mercado"><td>Tasa Mercado Esperada</td> <td>${fmtPct(s.mercado_avg)}</td></tr>
             </table>
           </div>`);
       } else {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TAGH Gestión · Análisis de Siniestralidad Agrícola</title>
+<title>TAGH Gestión · CIDES · Análisis de Siniestralidad Agrícola</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -19,20 +19,30 @@
   .header {
     background: white; padding: 18px 32px;
     display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid #e8e8ec;
+    border-bottom: 1px solid #e8e8ec; gap: 24px;
   }
+  .header-titulo { flex: 1; }
   .header-titulo h1 { margin: 0; font-size: 18px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.2px; }
   .header-titulo p { margin: 3px 0 0 0; font-size: 12px; color: #888; font-weight: 400; }
-  .header-logo {
+  .header-logos {
+    display: flex; align-items: center; gap: 18px;
+  }
+  .header-logos .logo-cides {
+    height: 40px; width: auto;
+    /* El SVG es blanco, lo invertimos para fondo claro */
+    filter: invert(1) brightness(0.2);
+  }
+  .header-logo-tagh {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     font-weight: 800; font-size: 17px; letter-spacing: 1px; color: #1a1a1a;
     display: flex; align-items: center; gap: 4px;
   }
-  .header-logo::after {
+  .header-logo-tagh::after {
     content: ''; display: inline-block; width: 6px; height: 20px;
     background: #c8102e; margin-left: 4px;
   }
-  .header-logo .sub { font-weight: 300; font-size: 11px; letter-spacing: 1.4px; color: #666; }
+  .header-logo-tagh .sub { font-weight: 300; font-size: 11px; letter-spacing: 1.4px; color: #666; }
+
   .filtros-row {
     background: white; padding: 14px 32px;
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
@@ -48,8 +58,9 @@
   }
   .filtro select:hover { border-color: #999; }
   .filtro select:focus { outline: none; border-color: #1F4E78; box-shadow: 0 0 0 3px rgba(31,78,120,.1); }
+
   .main {
-    display: grid; grid-template-columns: 1fr 220px;
+    display: grid; grid-template-columns: 1fr 230px;
     gap: 20px; padding: 20px 32px 12px 32px;
   }
   .mapa-wrap {
@@ -72,10 +83,11 @@
   }
   .kpi-label { font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
   .kpi-valor {
-    font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1;
+    font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1;
     letter-spacing: -0.5px;
   }
   .kpi-extra { font-size: 11px; color: #999; margin-top: 4px; }
+
   .legend {
     background: white; padding: 10px 12px;
     border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.15);
@@ -97,6 +109,7 @@
     display: inline-block; width: 14px; height: 10px;
     background: #e6e6e6; border: 1px solid rgba(0,0,0,.1);
   }
+
   .leaflet-tooltip.lc-label {
     background: rgba(255,255,255,.92); border: 1px solid rgba(0,0,0,.15);
     color: #1a1a1a; font-weight: 700; font-size: 10px;
@@ -106,7 +119,8 @@
   .leaflet-tooltip.lc-label:before { display: none; }
   .leaflet-tooltip.lc-label.label-grande { font-size: 12px; padding: 2px 7px; }
   .leaflet-tooltip.lc-label.label-chico { font-size: 9px; padding: 1px 3px; }
-  .leaflet-popup-content { margin: 12px 14px; min-width: 220px; }
+
+  .leaflet-popup-content { margin: 12px 14px; min-width: 240px; }
   .popup-tabla h4 { margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a; font-weight: 700; }
   .popup-tabla .sub { color: #888; font-size: 11px; margin-bottom: 8px; }
   .popup-tabla table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -114,12 +128,14 @@
   .popup-tabla td:first-child { color: #666; }
   .popup-tabla td:last-child { font-weight: 600; text-align: right; color: #1a1a1a; }
   .popup-tabla tr.destacado td { color: #1F4E78; font-weight: 700; padding-top: 6px; border-top: 1px solid #e8e8ec; }
+
   .disclaimer {
     padding: 0 32px 20px 32px;
     font-size: 11px; color: #888; line-height: 1.5;
     border-top: 1px solid #e8e8ec; padding-top: 14px; margin-top: 8px;
   }
   .disclaimer strong { color: #555; }
+
   #status {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
     background: rgba(0,0,0,.78); color: white;
@@ -127,11 +143,13 @@
     z-index: 9999; transition: opacity .3s;
   }
   #status.hidden { opacity: 0; pointer-events: none; }
+
   @media (max-width: 900px) {
     .main { grid-template-columns: 1fr; }
     .kpis { flex-direction: row; flex-wrap: wrap; }
     .kpi { flex: 1 1 calc(33% - 14px); min-width: 140px; }
     .filtros-row { grid-template-columns: repeat(2, 1fr); }
+    .header { flex-wrap: wrap; }
   }
 </style>
 </head>
@@ -142,7 +160,10 @@
     <h1>Análisis histórico de siniestralidad agrícola por departamento</h1>
     <p>Indicadores estadísticos elaborados sobre datos de campañas previas — Material analítico de referencia</p>
   </div>
-  <div class="header-logo">TAGH<span class="sub">GESTION</span></div>
+  <div class="header-logos">
+    <img src="https://cides.ar/wp-content/uploads/cides-logo-w.svg" alt="CIDES" class="logo-cides">
+    <div class="header-logo-tagh">TAGH<span class="sub">GESTION</span></div>
+  </div>
 </div>
 
 <div class="filtros-row">
@@ -165,7 +186,7 @@
     <div class="kpi">
       <div class="kpi-label">LC histórico</div>
       <div class="kpi-valor" id="kpi-lc">—</div>
-      <div class="kpi-extra">Siniestralidad media observada</div>
+      <div class="kpi-extra">Pond. por hectáreas</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">LC ajustado CAT</div>
@@ -173,7 +194,7 @@
       <div class="kpi-extra">Incluye margen catastrófico</div>
     </div>
     <div class="kpi">
-      <div class="kpi-label">Tasa Teórica</div>
+      <div class="kpi-label">Tasa Teórica (1-40%)</div>
       <div class="kpi-valor" id="kpi-ref">—</div>
       <div class="kpi-extra">Indicador integral histórico</div>
     </div>
@@ -181,7 +202,7 @@
 </div>
 
 <div class="disclaimer">
-  <strong>Aclaración:</strong> Los valores presentados son indicadores estadísticos elaborados sobre información histórica de campañas previas, agregada por departamento, cultivo y tipo de cobertura. Constituyen material analítico de referencia y no representan recomendaciones tarifarias ni precios de mercado. Cada operador debe realizar su propio análisis técnico y comercial.
+  <strong>Aclaración:</strong> Los valores presentados son indicadores estadísticos elaborados sobre información histórica de campañas previas, agregada por departamento, cultivo y tipo de cobertura, con promedios ponderados por hectáreas. Constituyen material analítico de referencia y no representan recomendaciones tarifarias ni precios de mercado. Cada operador debe realizar su propio análisis técnico y comercial.
 </div>
 
 <div id="status">Cargando datos…</div>
@@ -214,54 +235,29 @@ const filtros = {
   escenario: ESCENARIO_DEFAULT
 };
 
-// ============================================================
-// PARSEO ROBUSTO DE NÚMEROS
-// ============================================================
-// Maneja:
-// - "3.12" → 3.12
-// - "3,12" → 3.12 (formato regional español)
-// - "1.234,56" → 1234.56
-// - "1,234.56" → 1234.56
-// - "3,12%" → 3.12
-// - "$1.234" → 1234
-// - "" / null / undefined → null
 function parseNum(v) {
   if (v == null || v === '') return null;
   if (typeof v === 'number') return isFinite(v) ? v : null;
   let s = String(v).trim();
   if (!s) return null;
-  // Quitar símbolos comunes
   s = s.replace(/[%$\s]/g, '');
-  // Detectar formato: si tiene tanto coma como punto, el último es decimal
   const lastDot = s.lastIndexOf('.');
   const lastComma = s.lastIndexOf(',');
   if (lastDot >= 0 && lastComma >= 0) {
-    // Ambos presentes: el último es el separador decimal
-    if (lastComma > lastDot) {
-      // Formato europeo: 1.234,56
-      s = s.replace(/\./g, '').replace(',', '.');
-    } else {
-      // Formato anglo: 1,234.56
-      s = s.replace(/,/g, '');
-    }
+    if (lastComma > lastDot) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
   } else if (lastComma >= 0) {
-    // Solo coma: asumir decimal español
     s = s.replace(',', '.');
   }
-  // Si solo punto, ya está bien
   const n = parseFloat(s);
   return isFinite(n) ? n : null;
 }
 
-// Normaliza nombres de columnas: quita BOM, lowercase, trim
 function normalizarHeader(h) {
   if (!h) return '';
   return String(h).replace(/^\ufeff/, '').trim().toLowerCase();
 }
 
-// ============================================================
-// INIT
-// ============================================================
 async function init() {
   initMap();
   try {
@@ -310,47 +306,37 @@ async function cargarDatos() {
     const obj = Object.keys(geojsonData.objects)[0];
     geojsonData = topojson.feature(geojsonData, geojsonData.objects[obj]);
   }
-
   setStatus('Descargando datos…');
   const csvResp = await fetch(CSV_URL);
-  if (!csvResp.ok) throw new Error(`CSV ${csvResp.status}. ¿Está publicado?`);
+  if (!csvResp.ok) throw new Error(`CSV ${csvResp.status}`);
   const csvText = await csvResp.text();
-
-  // Parsear SIN dynamicTyping para tener control total sobre la conversión
   const parsed = Papa.parse(csvText, {
-    header: true,
-    skipEmptyLines: true,
-    transformHeader: normalizarHeader
+    header: true, skipEmptyLines: true, transformHeader: normalizarHeader
   });
 
-  console.log('=== Columnas detectadas en el CSV ===', parsed.meta.fields);
+  console.log('=== Columnas detectadas ===', parsed.meta.fields);
   console.log('=== Primera fila cruda ===', parsed.data[0]);
 
-  // Convertir tipos manualmente
   const camposNumericos = [
     'geo_id', 'registros', 'anios_considerados', 'hectareas', 'suma_asegurada',
     'lc_medio_pct', 'lc_max_pct', 'desvio_lc_pct',
     'adic_cat_historico_pct', 'adic_cat_prorrateado_pct',
     'lc_mas_cat_pct', 'tasa_comercial_pct',
-    'n_anios_cat', 'n_divisor'
+    'n_divisor'
   ];
-
   csvData = parsed.data
     .map(row => {
       const out = { ...row };
       for (const k of camposNumericos) {
         if (k in out) out[k] = parseNum(out[k]);
       }
-      // n_anios_cat lo mantenemos como string también para el filtro
-      // (puede ser "N (dinámico)" o números)
       out.n_anios_cat_str = String(row.n_anios_cat || '').trim();
       return out;
     })
     .filter(r => r.geo_id != null);
 
   console.log('=== Primera fila parseada ===', csvData[0]);
-  console.log('=== Total filas válidas ===', csvData.length);
-
+  console.log('=== Total filas ===', csvData.length);
   setStatus(`${csvData.length.toLocaleString('es-AR')} filas cargadas`);
 }
 
@@ -385,8 +371,8 @@ function popularFiltros() {
     const opt = document.createElement('option');
     opt.value = e;
     let label = e;
-    if (e === ESCENARIO_DEFAULT) label = 'N (dinámico) — años reales';
-    else if (/^\d+$/.test(e)) label = `CAT en ${e} años`;
+    if (e === ESCENARIO_DEFAULT) label = 'Reserva CAT Dinámica';
+    else if (/^\d+$/.test(e)) label = `Reserva CAT ${e} años`;
     opt.textContent = label;
     selEsc.appendChild(opt);
   }
@@ -464,6 +450,7 @@ function filtrarFilas() {
   });
 }
 
+// ====== AGREGAR POR GeoID (con promedio ponderado por hectáreas) ======
 function agregarPorGeoID(filas) {
   const out = new Map();
   for (const r of filas) {
@@ -472,33 +459,84 @@ function agregarPorGeoID(filas) {
     if (!out.has(gid)) {
       out.set(gid, {
         geo_id: gid, provincia: r.provincia, departamento: r.departamento,
-        lc_medio: [], lc_max: [], desvio_lc: [], adic_cat_p: [],
-        lc_mas_cat: [], referencia: [], hectareas: 0, suma_asegurada: 0,
-        registros: [], anios: []
+        // Para ponderar: arrays paralelos de valor y peso (hectáreas)
+        lc_medio_vals: [], lc_medio_pesos: [],
+        lc_mas_cat_vals: [], lc_mas_cat_pesos: [],
+        referencia_vals: [], referencia_pesos: [],
+        lc_max: -Infinity,  // máximo absoluto
+        desvio_vals: [], desvio_pesos: [],  // ponderado
+        adic_cat_p_vals: [], adic_cat_p_pesos: [],
+        hectareas: 0,
+        // Subtotales:
+        cant_casos: 0,
+        anios_set: new Set(),
+        registros_total: 0,
+        anios_sumweighted: 0, anios_pesos_total: 0  // para media ponderada de años
       });
     }
     const s = out.get(gid);
-    if (r.lc_medio_pct != null) s.lc_medio.push(r.lc_medio_pct);
-    if (r.lc_max_pct != null) s.lc_max.push(r.lc_max_pct);
-    if (r.desvio_lc_pct != null) s.desvio_lc.push(r.desvio_lc_pct);
-    if (r.adic_cat_prorrateado_pct != null) s.adic_cat_p.push(r.adic_cat_prorrateado_pct);
-    if (r.lc_mas_cat_pct != null) s.lc_mas_cat.push(r.lc_mas_cat_pct);
-    if (r.tasa_comercial_pct != null) s.referencia.push(r.tasa_comercial_pct);
-    if (r.hectareas != null) s.hectareas += r.hectareas;
-    if (r.suma_asegurada != null) s.suma_asegurada += r.suma_asegurada;
-    if (r.registros != null) s.registros.push(r.registros);
-    if (r.anios_considerados != null) s.anios.push(r.anios_considerados);
+    const w = (r.hectareas != null && r.hectareas > 0) ? r.hectareas : 0;
+    s.hectareas += (r.hectareas || 0);
+    s.cant_casos += 1;  // Cada FILA es un caso (cobertura/cultivo)
+    if (r.registros != null) s.registros_total += r.registros;
+    if (r.anios_considerados != null) {
+      s.anios_set.add(r.anios_considerados);
+      if (w > 0) {
+        s.anios_sumweighted += r.anios_considerados * w;
+        s.anios_pesos_total += w;
+      }
+    }
+    if (r.lc_medio_pct != null) {
+      s.lc_medio_vals.push(r.lc_medio_pct);
+      s.lc_medio_pesos.push(w);
+    }
+    if (r.lc_max_pct != null) {
+      if (r.lc_max_pct > s.lc_max) s.lc_max = r.lc_max_pct;
+    }
+    if (r.desvio_lc_pct != null) {
+      s.desvio_vals.push(r.desvio_lc_pct);
+      s.desvio_pesos.push(w);
+    }
+    if (r.adic_cat_prorrateado_pct != null) {
+      s.adic_cat_p_vals.push(r.adic_cat_prorrateado_pct);
+      s.adic_cat_p_pesos.push(w);
+    }
+    if (r.lc_mas_cat_pct != null) {
+      s.lc_mas_cat_vals.push(r.lc_mas_cat_pct);
+      s.lc_mas_cat_pesos.push(w);
+    }
+    if (r.tasa_comercial_pct != null) {
+      s.referencia_vals.push(r.tasa_comercial_pct);
+      s.referencia_pesos.push(w);
+    }
   }
-  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+
+  // Función de promedio ponderado (fallback a simple si no hay pesos)
+  function wavg(vals, pesos) {
+    if (!vals.length) return null;
+    let sumW = 0, sumWV = 0, sumV = 0;
+    for (let i = 0; i < vals.length; i++) {
+      sumV += vals[i];
+      if (pesos[i] > 0) {
+        sumW += pesos[i];
+        sumWV += vals[i] * pesos[i];
+      }
+    }
+    if (sumW > 0) return sumWV / sumW;
+    return sumV / vals.length;
+  }
+
   for (const s of out.values()) {
-    s.lc_medio_avg = avg(s.lc_medio);
-    s.lc_max_avg = avg(s.lc_max);
-    s.desvio_lc_avg = avg(s.desvio_lc);
-    s.adic_cat_p_avg = avg(s.adic_cat_p);
-    s.lc_mas_cat_avg = avg(s.lc_mas_cat);
-    s.referencia_avg = avg(s.referencia);
-    s.registros_avg = avg(s.registros);
-    s.anios_avg = avg(s.anios);
+    s.lc_medio_avg = wavg(s.lc_medio_vals, s.lc_medio_pesos);
+    s.lc_max_avg = (s.lc_max === -Infinity) ? null : s.lc_max;
+    s.desvio_lc_avg = wavg(s.desvio_vals, s.desvio_pesos);
+    s.adic_cat_p_avg = wavg(s.adic_cat_p_vals, s.adic_cat_p_pesos);
+    s.lc_mas_cat_avg = wavg(s.lc_mas_cat_vals, s.lc_mas_cat_pesos);
+    s.referencia_avg = wavg(s.referencia_vals, s.referencia_pesos);
+    // Años considerados: promedio ponderado por hectáreas
+    s.anios_avg = (s.anios_pesos_total > 0)
+      ? s.anios_sumweighted / s.anios_pesos_total
+      : (s.anios_set.size > 0 ? [...s.anios_set].reduce((a,b)=>a+b,0)/s.anios_set.size : null);
   }
   return out;
 }
@@ -569,7 +607,6 @@ function calcularRangoDesvio(stats) {
 
 const fmtPct = v => (v==null||isNaN(v)) ? '—' : v.toFixed(2) + '%';
 const fmtNum = v => (v==null||isNaN(v)) ? '—' : Math.round(v).toLocaleString('es-AR');
-const fmtMoney = v => (v==null||isNaN(v)) ? '—' : '$' + Math.round(v).toLocaleString('es-AR');
 
 function refrescar() {
   if (!geojsonData) return;
@@ -608,16 +645,15 @@ function refrescar() {
             <h4>${nomDpto}</h4>
             <div class="sub">${nomProv}</div>
             <table>
-              <tr><td>Registros (media)</td>      <td>${fmtNum(s.registros_avg)}</td></tr>
-              <tr><td>Años considerados</td>      <td>${s.anios_avg ? s.anios_avg.toFixed(1) : '—'}</td></tr>
-              <tr><td>Hectáreas (total)</td>      <td>${fmtNum(s.hectareas)}</td></tr>
-              <tr><td>Suma asegurada</td>         <td>${fmtMoney(s.suma_asegurada)}</td></tr>
-              <tr><td>LC histórico</td>           <td>${fmtPct(s.lc_medio_avg)}</td></tr>
-              <tr><td>LC máximo</td>              <td>${fmtPct(s.lc_max_avg)}</td></tr>
-              <tr><td>Variabilidad LC</td>        <td>${fmtPct(s.desvio_lc_avg)}</td></tr>
-              <tr><td>Adic CAT prorrateado</td>   <td>${fmtPct(s.adic_cat_p_avg)}</td></tr>
-              <tr class="destacado"><td>LC ajustado CAT</td>   <td>${fmtPct(s.lc_mas_cat_avg)}</td></tr>
-              <tr class="destacado"><td>Tasa Teórica</td> <td>${fmtPct(s.referencia_avg)}</td></tr>
+              <tr><td>Cant. de Casos</td>           <td>${fmtNum(s.cant_casos)}</td></tr>
+              <tr><td>Años considerados con casos</td><td>${s.anios_avg ? s.anios_avg.toFixed(1) : '—'}</td></tr>
+              <tr><td>Hectáreas (total)</td>        <td>${fmtNum(s.hectareas)}</td></tr>
+              <tr><td>LC Histórico Pond. Ha.</td>   <td>${fmtPct(s.lc_medio_avg)}</td></tr>
+              <tr><td>LC Máx. Peor Año</td>         <td>${fmtPct(s.lc_max_avg)}</td></tr>
+              <tr><td>Variabilidad LC</td>          <td>${fmtPct(s.desvio_lc_avg)}</td></tr>
+              <tr><td>Adic CAT prorrateado</td>     <td>${fmtPct(s.adic_cat_p_avg)}</td></tr>
+              <tr class="destacado"><td>LC ajustado CAT</td>      <td>${fmtPct(s.lc_mas_cat_avg)}</td></tr>
+              <tr class="destacado"><td>Tasa Teórica (1-40%)</td> <td>${fmtPct(s.referencia_avg)}</td></tr>
             </table>
           </div>`);
       } else {
